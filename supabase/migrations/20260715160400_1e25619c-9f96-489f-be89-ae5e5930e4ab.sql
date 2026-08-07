@@ -1,0 +1,9 @@
+
+ALTER TABLE public.clientes
+  ADD COLUMN IF NOT EXISTS sexo TEXT,
+  ADD COLUMN IF NOT EXISTS bairro TEXT,
+  ADD COLUMN IF NOT EXISTS estado_civil TEXT,
+  ADD COLUMN IF NOT EXISTS como_conheceu TEXT;
+
+ALTER TABLE public.processos
+  ADD COLUMN IF NOT EXISTS sucumbencias_valor NUMERIC(14,2);

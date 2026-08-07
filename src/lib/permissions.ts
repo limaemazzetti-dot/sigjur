@@ -1,0 +1,16 @@
+export const ALL_PAGES: { path: string; label: string; group: string }[] = [
+  { path: "/resumo", label: "Resumo", group: "Visão geral" },
+  { path: "/dashboard", label: "Painel", group: "Visão geral" },
+  { path: "/processos", label: "Processos", group: "Jurídico" },
+  { path: "/audiencias", label: "Audiências", group: "Jurídico" },
+  { path: "/prazos", label: "Prazos", group: "Jurídico" },
+  { path: "/pericias", label: "Perícias", group: "Jurídico" },
+  { path: "/clientes", label: "Clientes", group: "Jurídico" },
+  { path: "/modelos", label: "Modelos", group: "Jurídico" },
+  { path: "/cadastros", label: "Cadastros", group: "Jurídico" },
+  { path: "/financeiro/lancamentos", label: "Lançamentos", group: "Financeiro" },
+  { path: "/financeiro/dre", label: "DRE", group: "Financeiro" },
+  { path: "/financeiro/plano-contas", label: "Cadastro de contas", group: "Financeiro" },
+  { path: "/bi", label: "Business Intelligence", group: "Análises" },
+  { path: "/integracoes", label: "Google Sheets", group: "Integrações" },
+];

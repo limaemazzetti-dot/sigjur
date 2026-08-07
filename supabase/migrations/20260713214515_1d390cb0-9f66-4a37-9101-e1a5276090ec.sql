@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS plano_contas_write ON public.plano_contas;
+CREATE POLICY plano_contas_write ON public.plano_contas FOR ALL TO authenticated USING (is_staff(auth.uid())) WITH CHECK (is_staff(auth.uid()));

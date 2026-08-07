@@ -1,0 +1,23 @@
+
+ALTER TABLE public.processos
+  ADD COLUMN IF NOT EXISTS pasta text,
+  ADD COLUMN IF NOT EXISTS tipo_acao text,
+  ADD COLUMN IF NOT EXISTS instancia text,
+  ADD COLUMN IF NOT EXISTS area text,
+  ADD COLUMN IF NOT EXISTS fase text,
+  ADD COLUMN IF NOT EXISTS tipo text,
+  ADD COLUMN IF NOT EXISTS advogado text,
+  ADD COLUMN IF NOT EXISTS prazo_em_aberto boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS data_prazo date,
+  ADD COLUMN IF NOT EXISTS detalhes_prazo text,
+  ADD COLUMN IF NOT EXISTS cliente_qualificacao text,
+  ADD COLUMN IF NOT EXISTS outro_envolvido text,
+  ADD COLUMN IF NOT EXISTS outro_envolvido_qualificacao text,
+  ADD COLUMN IF NOT EXISTS data_inicio date,
+  ADD COLUMN IF NOT EXISTS link_processo text,
+  ADD COLUMN IF NOT EXISTS link_pasta text,
+  ADD COLUMN IF NOT EXISTS resultado text,
+  ADD COLUMN IF NOT EXISTS valor_acordo numeric,
+  ADD COLUMN IF NOT EXISTS honorarios_valor numeric,
+  ADD COLUMN IF NOT EXISTS honorarios_percentual numeric,
+  ADD COLUMN IF NOT EXISTS sucumbencias_percentual numeric;

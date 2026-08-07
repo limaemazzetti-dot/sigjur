@@ -1,0 +1,488 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import "@fontsource/inter/300.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+@custom-variant dark (&:is(.dark *));
+
+table[data-column-resizable="true"] thead th {
+  position: relative;
+}
+
+.table-column-resizer {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  right: -5px;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.table-column-resizer::after {
+  content: "";
+  position: absolute;
+  top: 18%;
+  bottom: 18%;
+  left: 4px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.table-column-resizer:hover::after,
+body[data-resizing-column="true"] .table-column-resizer::after {
+  opacity: 0.8;
+}
+
+body[data-resizing-column="true"],
+body[data-resizing-column="true"] * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+@theme inline {
+  --font-serif: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--destructive);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --shadow-premium: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Default (dark) — Vinho profundo + Champagne fosco (luxo silencioso) */
+:root {
+  --radius: 1rem; /* 16px — botões */
+  --radius-card: 1.375rem; /* 22px — cards */
+
+  /* Backgrounds — preto neutro quente (sem tom avinhado/roxo) */
+  --background: #131314;
+  --foreground: #f5f1ea;
+  --card: #26262a;
+  --card-foreground: #f5f1ea;
+  --popover: #26262a;
+  --popover-foreground: #f5f1ea;
+
+  /* Champagne gold — primário */
+  --primary: #c8a96a;
+  --primary-foreground: #0b0b0c;
+
+  --secondary: #131314;
+  --secondary-foreground: #f5f1ea;
+
+  --muted: #17181a;
+  --muted-foreground: #a8a29a;
+
+  --accent: #c8a96a;
+  --accent-foreground: #0b0b0c;
+
+  --destructive: #b83a3a;
+  --destructive-foreground: #f5f1ea;
+
+  --success: #c8a96a;
+  --warning: #d8ba82;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --input: #17181a;
+  --ring: #c8a96a;
+
+  --chart-1: #c8a96a;
+  --chart-2: #d8ba82;
+  --chart-3: #8a8680;
+  --chart-4: #7a6640;
+  --chart-5: #4a443b;
+
+  /* Sidebar preta neutra, com destaques puxando o dourado */
+  --sidebar: #0b0b0c;
+  --sidebar-foreground: #f5f1ea;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: #0b0b0c;
+  --sidebar-accent: color-mix(in srgb, var(--primary) 10%, #131314);
+  --sidebar-accent-foreground: #f5f1ea;
+  --sidebar-border: color-mix(in srgb, var(--primary) 16%, transparent);
+  --sidebar-ring: var(--primary);
+
+  /* Degradê champagne premium — highlight especular percorre a superfície */
+  --gradient-gold: linear-gradient(
+    100deg,
+    #7a6640 0%,
+    #a88848 12%,
+    #c8a96a 24%,
+    #e4ce9a 36%,
+    #fff3d6 46%,
+    #fffbea 50%,
+    #fff3d6 54%,
+    #e4ce9a 64%,
+    #c8a96a 76%,
+    #a88848 88%,
+    #7a6640 100%
+  );
+}
+
+/* Light mode — mármore claro com o mesmo dourado champagne */
+.light {
+  --background: #f8f5f1;
+  --foreground: #1a1613;
+  --card: #ffffff;
+  --card-foreground: #1a1613;
+  --popover: #ffffff;
+  --popover-foreground: #1a1613;
+
+  --primary: #c8a96a;
+  --primary-foreground: #1a1613;
+
+  --secondary: #ede7e1;
+  --secondary-foreground: #1a1613;
+
+  --muted: #ede7e1;
+  --muted-foreground: #82757c;
+
+  --accent: #c8a96a;
+  --accent-foreground: #1a1613;
+
+  --destructive: #b83a3a;
+  --destructive-foreground: #ffffff;
+
+  --success: #a88848;
+  --warning: #c8a96a;
+
+  --border: rgba(26, 22, 19, 0.08);
+  --input: #ffffff;
+  --ring: #c8a96a;
+
+  --chart-1: #1a1613;
+  --chart-2: #c8a96a;
+  --chart-3: #82757c;
+  --chart-4: #a88848;
+  --chart-5: #4a443b;
+
+  /* Sidebar permanece sempre em modo black neutro, independente do tema claro */
+  --sidebar: #0b0b0c;
+  --sidebar-foreground: #f5f1ea;
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: #0b0b0c;
+  --sidebar-accent: color-mix(in srgb, var(--accent) 12%, #131314);
+  --sidebar-accent-foreground: #f5f1ea;
+  --sidebar-border: color-mix(in srgb, var(--accent) 18%, transparent);
+  --sidebar-ring: var(--accent);
+}
+
+/* Sidebar edges sempre alinhadas com a topbar (mesma cor de borda) */
+[data-side="left"] > div,
+[data-side="right"] > div,
+[data-sidebar="header"],
+[data-sidebar="footer"] {
+  border-color: var(--sidebar-border) !important;
+}
+
+/* Remove a divisória vertical entre a sidebar e o conteúdo — topo 100% preto,
+   inclusive no tema claro (a cor de fundo da sidebar cobre qualquer vão). */
+[data-side="left"] > div {
+  border-right-color: var(--sidebar) !important;
+  background-color: var(--sidebar);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-serif {
+    font-family: var(--font-serif);
+    letter-spacing: -0.015em;
+    font-weight: 700;
+  }
+
+  /* Lucide icons — stroke 1.75 padrão */
+  svg.lucide {
+    stroke-width: 1.75;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 40%, transparent);
+    color: var(--foreground);
+  }
+}
+
+@utility hairline {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--accent) 40%, transparent),
+    transparent
+  );
+  height: 1px;
+  width: 100%;
+}
+
+@utility card-premium {
+  background: var(--card);
+  border: 1px solid color-mix(in oklab, var(--accent) 12%, transparent);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+@utility btn-gold {
+  background: var(--gradient-gold);
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  color: #0b0b0d;
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 243, 214, 0.35) inset,
+    0 0 0 1px color-mix(in srgb, #c8a96a 40%, transparent),
+    0 10px 30px -12px color-mix(in srgb, #c8a96a 55%, transparent);
+  animation: shimmer-gold 6s linear infinite;
+  transition:
+    filter 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+@utility btn-gold-hover {
+  filter: brightness(1.1) saturate(1.05);
+  box-shadow:
+    0 1px 0 rgba(255, 243, 214, 0.5) inset,
+    0 0 0 1px color-mix(in srgb, #c8a96a 60%, transparent),
+    0 14px 40px -10px color-mix(in srgb, #c8a96a 70%, transparent);
+}
+
+@utility eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+/* Degradê dourado metálico — usado em pontos de destaque */
+@utility bg-gold-gradient {
+  background: var(--gradient-gold);
+  background-size: 220% 100%;
+  animation: shimmer-gold 7s linear infinite;
+}
+
+@utility text-gold-gradient {
+  background: var(--gradient-gold);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer-gold 6s linear infinite;
+}
+
+@utility border-gold-gradient {
+  border-image: var(--gradient-gold) 1;
+}
+
+@utility divider-gold {
+  height: 1px;
+  width: 100%;
+  background: var(--gradient-gold);
+  background-size: 220% 100%;
+  opacity: 0.85;
+  animation: shimmer-gold 8s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion — transições leves e interações premium                     */
+/* ------------------------------------------------------------------ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer-gold {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Elevação suave em hover — cards, tiles, blocos clicáveis */
+@utility hover-lift {
+  transition:
+    transform 260ms ease,
+    box-shadow 260ms ease,
+    border-color 260ms ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+    border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+  }
+}
+
+/* Sublinhado dourado animado — links de texto */
+@utility link-gold {
+  position: relative;
+  color: var(--foreground);
+  transition: color 200ms ease;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 1px;
+    width: 100%;
+    background: var(--gradient-gold);
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover {
+    color: var(--accent);
+  }
+  &:hover::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+/* Botão em dourado com brilho metálico deslizante ao passar o mouse */
+@utility shimmer-on-hover {
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  transition:
+    background-position 600ms ease,
+    filter 200ms ease,
+    transform 200ms ease;
+  &:hover {
+    background-position: 100% 50%;
+    filter: brightness(1.06);
+  }
+}
+
+/* Transições globais discretas em elementos interativos */
+@layer base {
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  summary,
+  label {
+    transition:
+      color 180ms ease,
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease,
+      opacity 180ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+#lovable-badge {
+  display: none !important;
+}
