@@ -149,6 +149,7 @@ function ProcessosPage() {
         Réu: p.reu,
         Status: STATUS_LABEL[p.status],
         Matéria: p.materia ?? "",
+        Área: p.area ?? p.materia ?? "",
         Responsável: p.clientes?.nome ?? "",
         "Data de entrada": p.data_inicio
           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
@@ -172,6 +173,7 @@ function ProcessosPage() {
         { header: "Réu", dataKey: "reu" },
         { header: "Status", dataKey: "status" },
         { header: "Matéria", dataKey: "materia" },
+        { header: "Área", dataKey: "area" },
         { header: "Data de entrada", dataKey: "entrada" },
       ],
       rows: list.data.map((p) => ({
@@ -183,6 +185,7 @@ function ProcessosPage() {
         reu: p.reu,
         status: STATUS_LABEL[p.status],
         materia: p.materia ?? "—",
+        area: p.area ?? p.materia ?? "—",
         entrada: p.data_inicio
           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
           : "—",
@@ -268,12 +271,6 @@ function ProcessosPage() {
               if (!r.autor && !r.reu) throw new Error("Linha sem Autor nem Réu");
               const cleaned: Record<string, unknown> = { ...r };
               if (cleaned.numero_cnj != null) cleaned.numero_cnj = String(cleaned.numero_cnj);
-              if (
-                typeof cleaned.honorarios_percentual === "number" &&
-                cleaned.honorarios_percentual > 1
-              ) {
-                cleaned.honorarios_percentual = cleaned.honorarios_percentual / 100;
-              }
               await upsertProcesso({
                 data: {
                   autor: String(r.autor ?? r.reu ?? "—"),
@@ -296,7 +293,7 @@ function ProcessosPage() {
                 <DialogTitle className="font-serif text-2xl">Novo processo</DialogTitle>
               </DialogHeader>
               <ProcessoForm
-                clientes={clientes.data ?? []}
+                clientes={(clientes.data ?? []).filter((cliente) => !cliente.fornecedor)}
                 onSubmit={(d) => mSave.mutate(d)}
                 loading={mSave.isPending}
               />
@@ -506,7 +503,7 @@ function ProcessosPage() {
                 <EditingTimeline processoId={editing.id} status={editing.status} />
                 <ProcessoForm
                   key={editing.id}
-                  clientes={clientes.data ?? []}
+                  clientes={(clientes.data ?? []).filter((cliente) => !cliente.fornecedor)}
                   initial={editing}
                   submitLabel="Salvar alterações"
                   submitIcon="save"
@@ -687,9 +684,19 @@ function ProcessoForm({
         .filter(Boolean)
         .join(" · ")
     : "";
-  function num(v: string): number | null {
-    return v ? Number(v) : null;
-  }
+  const baseCalculo = Number(form.valor_acordo ?? 0) || 0;
+  const percentual = (value: number | null | undefined) => {
+    const numeric = Number(value ?? 0) || 0;
+    return numeric > 0 && numeric <= 1 ? numeric * 100 : numeric;
+  };
+  const honorariosPercentualValor = (baseCalculo * percentual(form.honorarios_percentual)) / 100;
+  const sucumbenciasPercentualValor =
+    (baseCalculo * percentual(form.sucumbencias_percentual)) / 100;
+  const totalHonorarios =
+    (Number(form.honorarios_valor ?? 0) || 0) +
+    honorariosPercentualValor +
+    (Number(form.sucumbencias_valor ?? 0) || 0) +
+    sucumbenciasPercentualValor;
   return (
     <form
       className="space-y-4"
@@ -771,10 +778,7 @@ function ProcessoForm({
               <CatalogoCombobox
                 value={form.tipo_acao ?? ""}
                 onValueChange={(v) => set("tipo_acao", v)}
-                options={mergeOptions(
-                  catTipos.data?.map((o) => o.valor),
-                  referenceOptions.data?.tipo_acao,
-                )}
+                options={catTipos.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione o tipo de ação"
               />
             </div>
@@ -783,10 +787,7 @@ function ProcessoForm({
               <CatalogoCombobox
                 value={form.materia ?? ""}
                 onValueChange={(v) => set("materia", v)}
-                options={mergeOptions(
-                  catMaterias.data?.map((o) => o.valor),
-                  referenceOptions.data?.materia,
-                )}
+                options={catMaterias.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione a matéria"
               />
             </div>
@@ -876,10 +877,7 @@ function ProcessoForm({
               <CatalogoCombobox
                 value={form.advogado ?? ""}
                 onValueChange={(v) => set("advogado", v)}
-                options={mergeOptions(
-                  catAdvogados.data?.map((o) => o.valor),
-                  referenceOptions.data?.advogado,
-                )}
+                options={catAdvogados.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione o advogado"
               />
             </div>
@@ -897,10 +895,7 @@ function ProcessoForm({
               <CatalogoCombobox
                 value={form.fase ?? ""}
                 onValueChange={(v) => set("fase", v)}
-                options={mergeOptions(
-                  catFases.data?.map((o) => o.valor),
-                  referenceOptions.data?.fase,
-                )}
+                options={catFases.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione a fase"
               />
             </div>
@@ -1010,31 +1005,25 @@ function ProcessoForm({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Valor da Causa (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.valor_causa ?? ""}
-                onChange={(e) => set("valor_causa", num(e.target.value))}
+              <CurrencyInput
+                value={form.valor_causa}
+                onValueChange={(value) => set("valor_causa", value)}
               />
             </div>
             <div>
               <Label>Valor de Acordo / Sentença (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.valor_acordo ?? ""}
-                onChange={(e) => set("valor_acordo", num(e.target.value))}
+              <CurrencyInput
+                value={form.valor_acordo}
+                onValueChange={(value) => set("valor_acordo", value)}
               />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <Label>Honorários em R$</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.honorarios_valor ?? ""}
-                onChange={(e) => set("honorarios_valor", num(e.target.value))}
+              <CurrencyInput
+                value={form.honorarios_valor}
+                onValueChange={(value) => set("honorarios_valor", value)}
               />
             </div>
             <div>
@@ -1059,23 +1048,30 @@ function ProcessoForm({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Sucumbências em R$</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.sucumbencias_valor ?? ""}
-                onChange={(e) => set("sucumbencias_valor", num(e.target.value))}
+              <CurrencyInput
+                value={form.sucumbencias_valor}
+                onValueChange={(value) => set("sucumbencias_valor", value)}
               />
             </div>
             <div>
               <Label>Total em Honorários (R$)</Label>
-              <Input
-                readOnly
-                value={formatBRL((form.honorarios_valor ?? 0) + (form.sucumbencias_valor ?? 0))}
-                className="bg-muted"
-              />
+              <Input readOnly value={formatBRL(totalHonorarios)} className="bg-muted" />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Use ponto (.) para separar os centavos.</p>
+          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-4">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">
+              Total em honorários
+            </p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-primary">
+              {formatBRL(totalHonorarios)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Honorários de entrada, percentual sobre o acordo/sentença e sucumbências.
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Valores monetários são exibidos com centavos: 10.000,00.
+          </p>
         </TabsContent>
       </Tabs>
 
@@ -1096,6 +1092,54 @@ function mergeOptions(...groups: Array<string[] | undefined>) {
         .filter(Boolean),
     ),
   ).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+}
+
+function CurrencyInput({
+  value,
+  onValueChange,
+}: {
+  value: number | null | undefined;
+  onValueChange: (value: number | null) => void;
+}) {
+  const format = (amount: number | null | undefined) =>
+    amount == null
+      ? ""
+      : amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const [text, setText] = useState(format(value));
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    if (!editing) setText(format(value));
+  }, [value, editing]);
+
+  const parse = (raw: string): number | null => {
+    const clean = raw.replace(/[^0-9,.-]/g, "").trim();
+    if (!clean) return null;
+    const normalized = clean.includes(",") ? clean.replace(/\./g, "").replace(",", ".") : clean;
+    const amount = Number(normalized);
+    return Number.isFinite(amount) ? amount : null;
+  };
+
+  return (
+    <Input
+      inputMode="decimal"
+      value={text}
+      placeholder="0,00"
+      onFocus={() => {
+        setEditing(true);
+        setText(value == null ? "" : value.toFixed(2));
+      }}
+      onChange={(event) => {
+        const next = event.target.value;
+        setText(next);
+        onValueChange(parse(next));
+      }}
+      onBlur={() => {
+        setEditing(false);
+        setText(format(parse(text)));
+      }}
+    />
+  );
 }
 
 function normalizeName(value: string | null | undefined) {

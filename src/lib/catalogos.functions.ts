@@ -54,11 +54,18 @@ export const upsertCatalogo = createServerFn({ method: "POST" })
         categoria: z.enum(CATEGORIAS),
         valor: z.string().trim().min(1).max(200),
         ativo: z.boolean().default(true),
+        valor_anterior: z.string().trim().max(200).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     if (data.id) {
+      const { data: anterior, error: anteriorError } = await context.supabase
+        .from("catalogo_opcoes" as never)
+        .select("categoria, valor")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (anteriorError) throw new Error(anteriorError.message);
       const { data: updated, error } = await context.supabase
         .from("catalogo_opcoes" as never)
         .update({ categoria: data.categoria, valor: data.valor, ativo: data.ativo } as never)
@@ -70,6 +77,24 @@ export const upsertCatalogo = createServerFn({ method: "POST" })
         throw new Error(
           "A opção não foi alterada. Atualize a página e confirme se seu acesso é de Editor ou Administrador.",
         );
+      }
+      // Renomear uma opção também atualiza os processos que já a utilizam.
+      // Assim o cadastro e os filtros deixam de apresentar valores divergentes.
+      const oldValue = data.valor_anterior ?? (anterior as { valor?: string } | null)?.valor;
+      const oldCategory =
+        (anterior as { categoria?: Categoria } | null)?.categoria ?? data.categoria;
+      const processColumn: Record<Categoria, string> = {
+        tipo_acao: "tipo_acao",
+        materia: "materia",
+        fase: "fase",
+        advogado: "advogado",
+      };
+      if (oldValue && oldValue !== data.valor && oldCategory === data.categoria) {
+        const { error: processError } = await context.supabase
+          .from("processos" as never)
+          .update({ [processColumn[data.categoria]]: data.valor } as never)
+          .eq(processColumn[data.categoria], oldValue);
+        if (processError) throw new Error(processError.message);
       }
       return { id: data.id };
     }

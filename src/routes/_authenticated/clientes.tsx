@@ -282,7 +282,7 @@ function ClientesPage() {
                         </TableCell>
                         <TableCell className="text-sm">
                           <Badge variant={c.fornecedor ? "default" : "secondary"}>
-                            {c.fornecedor ? "Cliente / Fornecedor" : "Cliente"}
+                            {c.fornecedor ? "Fornecedor" : "Cliente"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm">{c.cpf_cnpj ?? "—"}</TableCell>
@@ -537,9 +537,10 @@ function ClienteForm({
           className="mt-0.5"
         />
         <span>
-          <span className="block text-sm font-medium">Este cadastro também é fornecedor</span>
+          <span className="block text-sm font-medium">Este cadastro é somente fornecedor</span>
           <span className="block text-xs text-muted-foreground mt-0.5">
-            Ao marcar, o nome poderá ser selecionado nos lançamentos de saída.
+            Ao marcar, o nome será usado apenas nos lançamentos de saída e não aparecerá nos
+            processos como cliente ou representante.
           </span>
         </span>
       </label>

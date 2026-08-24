@@ -134,7 +134,9 @@ function CatalogoManager({ categoria, canEdit }: { categoria: Categoria; canEdit
   });
   const mSave = useMutation({
     mutationFn: (o: { id: string; ativo: boolean; valor: string }) =>
-      upsertCatalogo({ data: { id: o.id, categoria, valor: o.valor, ativo: o.ativo } }),
+      upsertCatalogo({
+        data: { id: o.id, categoria, valor: o.valor, ativo: o.ativo, valor_anterior: editingValue },
+      }),
     onSuccess: () => {
       setEditingId(null);
       setEditingValue("");

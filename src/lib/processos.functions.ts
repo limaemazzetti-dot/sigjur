@@ -126,6 +126,14 @@ function normalizeSearch(value: string) {
     .trim();
 }
 
+function normalizeCatalogValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .trim();
+}
+
 function matchesProcessoSearch(processo: ProcessoRow, rawSearch: string) {
   const search = normalizeSearch(rawSearch);
   if (!search) return true;
@@ -150,6 +158,12 @@ function matchesProcessoSearch(processo: ProcessoRow, rawSearch: string) {
       .join(" "),
   );
   return wantedWords.every((wanted) => textString.includes(wanted));
+}
+
+// Processos antigos foram gravados somente com matéria. A área continua
+// sendo exibida nesses registros para não deixar a coluna vazia.
+function normalizeProcessoArea<T extends ProcessoRow>(processo: T): T {
+  return processo.area?.trim() ? processo : ({ ...processo, area: processo.materia } as T);
 }
 
 function applyProcessoOrder<T>(query: T, order: z.infer<typeof ProcessoOrder>) {
@@ -195,7 +209,7 @@ export const listProcessos = createServerFn({ method: "POST" })
       q = q.or("prazo_em_aberto.eq.false,prazo_em_aberto.is.null");
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const processos = (rows ?? []) as ProcessoRow[];
+    const processos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
     return data.q ? processos.filter((p) => matchesProcessoSearch(p, data.q!)) : processos;
   });
 
@@ -274,7 +288,7 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
       q = q.or("prazo_em_aberto.eq.false,prazo_em_aberto.is.null");
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const allProcessos = (rows ?? []) as ProcessoRow[];
+    const allProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
     const processos = data.q
       ? allProcessos.filter((p) => matchesProcessoSearch(p, data.q!))
       : allProcessos;
@@ -342,22 +356,44 @@ export const getProcesso = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return (row ?? null) as
-      | (ProcessoRow & {
-          clientes: {
-            id: string;
-            nome: string;
-            telefone: string | null;
-            email: string | null;
-          } | null;
-        })
-      | null;
+    return row
+      ? (normalizeProcessoArea(row as ProcessoRow) as
+          | (ProcessoRow & {
+              clientes: {
+                id: string;
+                nome: string;
+                telefone: string | null;
+                email: string | null;
+              } | null;
+            })
+          | null)
+      : null;
   });
 
 export const upsertProcesso = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, requireEditorAccess])
   .inputValidator((d: unknown) => ProcessoInput.parse(d))
   .handler(async ({ data, context }) => {
+    // O cadastro é a fonte única das opções. Ao salvar, valores legados
+    // (por exemplo, "CÍVEL" e "Cível") são gravados com a grafia definida em Cadastros.
+    const { data: catalogRows, error: catalogError } = await context.supabase
+      .from("catalogo_opcoes" as never)
+      .select("categoria, valor")
+      .eq("ativo", true);
+    if (catalogError) throw new Error(catalogError.message);
+    const catalogo = new Map<string, string>();
+    for (const option of (catalogRows ?? []) as Array<{ categoria: string; valor: string }>) {
+      catalogo.set(`${option.categoria}:${normalizeCatalogValue(option.valor)}`, option.valor);
+    }
+    const canonical = (categoria: string, value: string | null | undefined) =>
+      value ? (catalogo.get(`${categoria}:${normalizeCatalogValue(value)}`) ?? value) : value;
+    data = {
+      ...data,
+      tipo_acao: canonical("tipo_acao", data.tipo_acao),
+      materia: canonical("materia", data.materia),
+      fase: canonical("fase", data.fase),
+      advogado: canonical("advogado", data.advogado),
+    };
     if (data.numero_cnj?.trim()) {
       const normalized = data.numero_cnj.replace(/\D/g, "");
       // Textos legados como "Análise de contrato" também foram gravados
