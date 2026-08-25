@@ -5,7 +5,6 @@ import {
   listProcessosResumo,
   listProcessoFilterOptions,
   listProcessoReferenceOptions,
-  listAndamentos,
   upsertProcesso,
   deleteProcesso,
   STATUS_LABEL,
@@ -55,7 +54,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportToExcel, exportToPdf, formatBRL } from "@/lib/export";
-import { ProcessTimeline } from "@/components/process-timeline";
 import { useAutoSync } from "@/lib/use-auto-sync";
 import { ImportPlanilhaDialog } from "@/components/import-planilha-dialog";
 import { CatalogoCombobox } from "@/components/catalogo-combobox";
@@ -490,10 +488,13 @@ function ProcessosPage() {
       )}
 
       <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto p-0">
+        <SheetContent
+          side="right"
+          className="flex h-full w-full flex-col overflow-hidden p-0 sm:max-w-xl"
+        >
           {editing && (
-            <div className="flex flex-col">
-              <SheetHeader className="p-6 pb-4 border-b border-border/60">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <SheetHeader className="shrink-0 border-b border-border/60 p-6 pb-4">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   {editing.numero_cnj ?? "Sem CNJ"}
                 </p>
@@ -505,12 +506,7 @@ function ProcessosPage() {
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="p-6 space-y-6">
-                <EditingTimeline
-                  processoId={editing.id}
-                  status={editing.status}
-                  statusLabel={statusLabels[editing.status] ?? editing.status}
-                />
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
                 <ProcessoForm
                   key={editing.id}
                   clientes={(clientes.data ?? []).filter((cliente) => !cliente.fornecedor)}
@@ -551,33 +547,6 @@ function ProcessosPage() {
         </SheetContent>
       </Sheet>
     </div>
-  );
-}
-
-function EditingTimeline({
-  processoId,
-  status,
-  statusLabel,
-}: {
-  processoId: string;
-  status: string;
-  statusLabel: string;
-}) {
-  const andam = useQuery({
-    queryKey: ["andamentos", processoId],
-    queryFn: () => listAndamentos({ data: { processo_id: processoId } }),
-  });
-  return (
-    <ProcessTimeline
-      status={status}
-      statusLabel={statusLabel}
-      totalAndamentos={andam.data?.length ?? 0}
-      ultimoAndamento={
-        andam.data && andam.data.length > 0
-          ? { data: andam.data[0].data, titulo: andam.data[0].titulo }
-          : null
-      }
-    />
   );
 }
 
