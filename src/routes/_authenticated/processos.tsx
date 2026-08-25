@@ -294,7 +294,7 @@ function ProcessosPage() {
                 <Plus className="w-4 h-4 mr-2" /> Novo processo
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-none overflow-visible">
               <DialogHeader>
                 <DialogTitle className="font-serif text-2xl">Novo processo</DialogTitle>
               </DialogHeader>
@@ -724,9 +724,11 @@ function ProcessoForm({
       }}
     >
       <Tabs defaultValue="gerais" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="gerais">Dados Gerais</TabsTrigger>
-          <TabsTrigger value="complementares">Complementares</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="gerais">Geral</TabsTrigger>
+          <TabsTrigger value="partes-prazos">Partes e prazo</TabsTrigger>
+          <TabsTrigger value="complementares">Detalhes</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="valores">Valores</TabsTrigger>
         </TabsList>
 
@@ -760,36 +762,6 @@ function ProcessoForm({
             </div>
           </div>
 
-          <div className="rounded-md border border-border/60 p-3 space-y-3">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="prazo-aberto"
-                checked={!!form.prazo_em_aberto}
-                onCheckedChange={(c: CheckedState) => set("prazo_em_aberto", c === true)}
-              />
-              <Label htmlFor="prazo-aberto" className="cursor-pointer">
-                Prazo em aberto?
-              </Label>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-3">
-              <div>
-                <Label>Data do prazo</Label>
-                <Input
-                  type="date"
-                  value={form.data_prazo ?? ""}
-                  onChange={(e) => set("data_prazo", e.target.value)}
-                />
-              </div>
-              <div>
-                <Label>Detalhes do prazo</Label>
-                <Input
-                  value={form.detalhes_prazo ?? ""}
-                  onChange={(e) => set("detalhes_prazo", e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Tipo de Ação</Label>
@@ -819,6 +791,38 @@ function ProcessoForm({
             <div>
               <Label>Réu</Label>
               <Input required value={form.reu} onChange={(e) => set("reu", e.target.value)} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="partes-prazos" className="space-y-4 pt-4">
+          <div className="rounded-md border border-border/60 p-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="prazo-aberto"
+                checked={!!form.prazo_em_aberto}
+                onCheckedChange={(c: CheckedState) => set("prazo_em_aberto", c === true)}
+              />
+              <Label htmlFor="prazo-aberto" className="cursor-pointer">
+                Prazo em aberto?
+              </Label>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-3">
+              <div>
+                <Label>Data do prazo</Label>
+                <Input
+                  type="date"
+                  value={form.data_prazo ?? ""}
+                  onChange={(e) => set("data_prazo", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Detalhes do prazo</Label>
+                <Input
+                  value={form.detalhes_prazo ?? ""}
+                  onChange={(e) => set("detalhes_prazo", e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -960,6 +964,9 @@ function ProcessoForm({
               />
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="documentos" className="space-y-4 pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <Label>Data de protocolo</Label>
