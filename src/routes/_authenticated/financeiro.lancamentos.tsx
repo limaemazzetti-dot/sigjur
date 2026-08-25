@@ -60,6 +60,7 @@ import { exportToExcel, exportToPdf, formatBRL } from "@/lib/export";
 import { useAutoSync } from "@/lib/use-auto-sync";
 import { SearchableProcessPicker } from "@/components/searchable-process-picker";
 import { SearchableClientPicker } from "@/components/searchable-client-picker";
+import { CurrencyInput } from "@/components/currency-input";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -990,15 +991,11 @@ function LancamentoForm({
         </div>
         <div>
           <Label>Valor (R$)</Label>
-          <Input
-            type="number"
-            step="0.01"
+          <CurrencyInput
             required
             placeholder="0,00"
-            value={form.valor === 0 ? "" : form.valor}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, valor: e.target.value === "" ? 0 : Number(e.target.value) }))
-            }
+            value={form.valor === 0 ? null : form.valor}
+            onValueChange={(valor) => setForm((f) => ({ ...f, valor: valor ?? 0 }))}
           />
         </div>
       </div>

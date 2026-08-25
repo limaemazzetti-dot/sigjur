@@ -30,6 +30,7 @@ import { formatBRL } from "@/lib/export";
 import { ProcessTimeline } from "@/components/process-timeline";
 import { useAutoSync } from "@/lib/use-auto-sync";
 import { listStatusProcesso } from "@/lib/status-processo.functions";
+import { CurrencyInput } from "@/components/currency-input";
 
 export const Route = createFileRoute("/_authenticated/processos/$id")({
   component: ProcessoDetalhe,
@@ -484,11 +485,9 @@ function ProcessoEdit({
         </div>
         <div>
           <Label>Valor causa</Label>
-          <Input
-            type="number"
-            step="0.01"
-            value={f.valor_causa ?? ""}
-            onChange={(e) => set("valor_causa", e.target.value ? Number(e.target.value) : null)}
+          <CurrencyInput
+            value={f.valor_causa}
+            onValueChange={(value) => set("valor_causa", value)}
           />
         </div>
         <div className="col-span-2">

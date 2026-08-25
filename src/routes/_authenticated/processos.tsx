@@ -58,6 +58,7 @@ import { useAutoSync } from "@/lib/use-auto-sync";
 import { ImportPlanilhaDialog } from "@/components/import-planilha-dialog";
 import { CatalogoCombobox } from "@/components/catalogo-combobox";
 import { SearchableClientPicker } from "@/components/searchable-client-picker";
+import { CurrencyInput } from "@/components/currency-input";
 import { listStatusProcesso } from "@/lib/status-processo.functions";
 
 export const Route = createFileRoute("/_authenticated/processos")({
@@ -1086,54 +1087,6 @@ function mergeOptions(...groups: Array<string[] | undefined>) {
         .filter(Boolean),
     ),
   ).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
-}
-
-function CurrencyInput({
-  value,
-  onValueChange,
-}: {
-  value: number | null | undefined;
-  onValueChange: (value: number | null) => void;
-}) {
-  const format = (amount: number | null | undefined) =>
-    amount == null
-      ? ""
-      : amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const [text, setText] = useState(format(value));
-  const [editing, setEditing] = useState(false);
-
-  useEffect(() => {
-    if (!editing) setText(format(value));
-  }, [value, editing]);
-
-  const parse = (raw: string): number | null => {
-    const clean = raw.replace(/[^0-9,.-]/g, "").trim();
-    if (!clean) return null;
-    const normalized = clean.includes(",") ? clean.replace(/\./g, "").replace(",", ".") : clean;
-    const amount = Number(normalized);
-    return Number.isFinite(amount) ? amount : null;
-  };
-
-  return (
-    <Input
-      inputMode="decimal"
-      value={text}
-      placeholder="0,00"
-      onFocus={() => {
-        setEditing(true);
-        setText(value == null ? "" : value.toFixed(2));
-      }}
-      onChange={(event) => {
-        const next = event.target.value;
-        setText(next);
-        onValueChange(parse(next));
-      }}
-      onBlur={() => {
-        setEditing(false);
-        setText(format(parse(text)));
-      }}
-    />
-  );
 }
 
 function normalizeName(value: string | null | undefined) {
