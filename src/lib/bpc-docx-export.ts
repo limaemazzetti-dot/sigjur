@@ -2,7 +2,10 @@ import templateAsset from "@/assets/kit-bpc-loas-com-representante.docx.asset.js
 import { buildBpcLoasVars, type BpcClienteData } from "@/lib/bpc-loas-kit";
 
 function sanitizeFilename(s: string) {
-  return s.replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
+  return s
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function replaceSequential(text: string, pattern: RegExp, next: () => string) {
@@ -55,7 +58,9 @@ function fillXml(xml: string, cliente: BpcClienteData) {
 
       for (const node of textNodes) {
         let text = node.textContent ?? "";
-        text = replaceSequential(text, /NOME/g, () => (nomeIndex++ === 0 ? vars.nome : vars.representante_nome));
+        text = replaceSequential(text, /NOME/g, () =>
+          nomeIndex++ === 0 ? vars.nome : vars.representante_nome,
+        );
         text = replaceSequential(text, /nacionalidade/g, () =>
           nacionalidadeIndex++ === 0 ? vars.nacionalidade : vars.representante_nacionalidade,
         );
@@ -95,12 +100,17 @@ function fillXml(xml: string, cliente: BpcClienteData) {
 }
 
 export async function downloadBpcLoasKitDocx(nomeArquivo: string, cliente: BpcClienteData) {
-  const [{ default: PizZip }, { saveAs }] = await Promise.all([import("pizzip"), import("file-saver")]);
+  const [{ default: PizZip }, { saveAs }] = await Promise.all([
+    import("pizzip"),
+    import("file-saver"),
+  ]);
   const response = await fetch(templateAsset.url);
   if (!response.ok) throw new Error("Não foi possível carregar o modelo DOCX original.");
 
   const zip = new PizZip(await response.arrayBuffer());
-  const xmlFiles = Object.keys(zip.files).filter((name) => /^word\/(document|header|footer)\d*\.xml$/.test(name));
+  const xmlFiles = Object.keys(zip.files).filter((name) =>
+    /^word\/(document|header|footer)\d*\.xml$/.test(name),
+  );
 
   for (const fileName of xmlFiles) {
     const file = zip.file(fileName);

@@ -38,9 +38,10 @@ export function buildBpcLoasVars(c: BpcClienteData) {
   const estado = value(c.estado, "UF");
   const cep = value(c.cep);
   const enderecoBase = value(c.endereco);
-  const enderecoCompleto = [enderecoBase, cidade, estado, cep !== BLANK ? `CEP ${cep}` : ""]
-    .filter((part) => part && part !== BLANK)
-    .join(", ") || BLANK;
+  const enderecoCompleto =
+    [enderecoBase, cidade, estado, cep !== BLANK ? `CEP ${cep}` : ""]
+      .filter((part) => part && part !== BLANK)
+      .join(", ") || BLANK;
 
   return {
     nome: value(c.nome),

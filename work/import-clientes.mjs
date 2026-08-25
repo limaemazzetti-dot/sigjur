@@ -46,7 +46,9 @@ function parseCsv(text, delimiter = ";") {
 }
 
 function clean(value) {
-  const result = String(value ?? "").replace(/\s+/g, " ").trim();
+  const result = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
   return result || null;
 }
 
@@ -73,7 +75,12 @@ function birthDate(value) {
   let year = Number(match[3]);
   if (match[3].length === 2) year += year <= 26 ? 2000 : 1900;
   const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  )
+    return null;
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
@@ -110,7 +117,8 @@ function mergeSource(target, incoming) {
   const merged = { ...target };
   for (const [key, value] of Object.entries(incoming)) {
     if (key === "observacoes") merged[key] = mergeText(merged[key], value);
-    else if ((merged[key] == null || merged[key] === "") && value != null && value !== "") merged[key] = value;
+    else if ((merged[key] == null || merged[key] === "") && value != null && value !== "")
+      merged[key] = value;
   }
   merged._sourceLines = [...target._sourceLines, ...incoming._sourceLines];
   return merged;
@@ -123,17 +131,38 @@ function empty(value) {
 function updatePayload(existing, source) {
   const update = {};
   const fillable = [
-    "cpf_cnpj", "rg", "email", "telefone", "profissao", "data_aniversario",
-    "endereco", "bairro", "cidade", "estado", "cep", "observacoes", "nacionalidade",
-    "sexo", "estado_civil", "como_conheceu", "senha_gov_br",
+    "cpf_cnpj",
+    "rg",
+    "email",
+    "telefone",
+    "profissao",
+    "data_aniversario",
+    "endereco",
+    "bairro",
+    "cidade",
+    "estado",
+    "cep",
+    "observacoes",
+    "nacionalidade",
+    "sexo",
+    "estado_civil",
+    "como_conheceu",
+    "senha_gov_br",
   ];
   for (const key of fillable) {
     if (empty(existing[key]) && !empty(source[key])) update[key] = source[key];
-    else if (key === "observacoes" && !empty(source[key]) && !normalized(existing[key]).includes(normalized(source[key]))) {
+    else if (
+      key === "observacoes" &&
+      !empty(source[key]) &&
+      !normalized(existing[key]).includes(normalized(source[key]))
+    ) {
       update[key] = mergeText(existing[key], source[key]);
     }
   }
-  if (!empty(source.created_at) && String(existing.created_at ?? "").slice(0, 10) !== source.created_at.slice(0, 10)) {
+  if (
+    !empty(source.created_at) &&
+    String(existing.created_at ?? "").slice(0, 10) !== source.created_at.slice(0, 10)
+  ) {
     update.created_at = source.created_at;
   }
   return update;
@@ -164,7 +193,9 @@ const rows = parseCsv(csvText.replace(/^\uFEFF/, ""));
 const headerIndex = rows.findIndex((row) => row.some((cell) => clean(cell) === "Nome"));
 if (headerIndex < 0) throw new Error("Cabeçalho de clientes não encontrado");
 const header = rows[headerIndex].map((cell) => clean(cell));
-const column = Object.fromEntries(header.map((name, index) => [name, index]).filter(([name]) => name));
+const column = Object.fromEntries(
+  header.map((name, index) => [name, index]).filter(([name]) => name),
+);
 
 const sourceRows = [];
 for (let index = headerIndex + 1; index < rows.length; index += 1) {
@@ -207,7 +238,8 @@ const [ownerProfiles, existingClients] = await Promise.all([
   rest("profiles?select=id,email&email=eq.marcelo%40gmail.com"),
   rest("clientes?select=*"),
 ]);
-if (ownerProfiles.length !== 1) throw new Error("Usuário proprietário não encontrado de forma única");
+if (ownerProfiles.length !== 1)
+  throw new Error("Usuário proprietário não encontrado de forma única");
 const ownerId = ownerProfiles[0].id;
 
 const unmatchedExisting = new Set(existingClients.map((client) => client.id));
@@ -215,14 +247,23 @@ const insertRows = [];
 const updateRows = [];
 for (const source of sourceClients) {
   const sourceCpf = digits(source.cpf_cnpj);
-  const sameName = existingClients.filter((client) => unmatchedExisting.has(client.id) && normalized(client.nome) === normalized(source.nome));
-  const sameCpfAndName = sameName.find((client) => sourceCpf && digits(client.cpf_cnpj) === sourceCpf);
+  const sameName = existingClients.filter(
+    (client) =>
+      unmatchedExisting.has(client.id) && normalized(client.nome) === normalized(source.nome),
+  );
+  const sameCpfAndName = sameName.find(
+    (client) => sourceCpf && digits(client.cpf_cnpj) === sourceCpf,
+  );
   const blankCpfSameName = sameName.find((client) => empty(client.cpf_cnpj));
-  const existing = sameCpfAndName ?? blankCpfSameName ?? (sameName.length === 1 && !sourceCpf ? sameName[0] : null);
+  const existing =
+    sameCpfAndName ??
+    blankCpfSameName ??
+    (sameName.length === 1 && !sourceCpf ? sameName[0] : null);
   if (existing) {
     unmatchedExisting.delete(existing.id);
     const changes = updatePayload(existing, source);
-    if (Object.keys(changes).length) updateRows.push({ id: existing.id, changes, sourceLines: source._sourceLines });
+    if (Object.keys(changes).length)
+      updateRows.push({ id: existing.id, changes, sourceLines: source._sourceLines });
   } else {
     const { _sourceLines, ...payload } = source;
     if (!payload.created_at) delete payload.created_at;

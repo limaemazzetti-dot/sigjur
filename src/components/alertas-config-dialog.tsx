@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +55,13 @@ const CAMPOS = [
   { key: "aniversario" as const, label: "Aniversários", icon: Cake },
 ];
 
-export function AlertasConfigDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function AlertasConfigDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const [cfg, setCfg] = useState<AlertaConfig>(DEFAULT_ALERTA_CONFIG);
 
   useEffect(() => {
@@ -103,7 +116,9 @@ export function AlertasConfigDialog({ open, onOpenChange }: { open: boolean; onO
                   min={0}
                   max={60}
                   value={cfg[key]}
-                  onChange={(e) => setCfg((c) => ({ ...c, [key]: Math.max(0, Number(e.target.value) || 0) }))}
+                  onChange={(e) =>
+                    setCfg((c) => ({ ...c, [key]: Math.max(0, Number(e.target.value) || 0) }))
+                  }
                   className="w-20 h-8"
                 />
                 <span className="text-xs text-muted-foreground w-10">dias</span>
@@ -127,7 +142,9 @@ export function AlertasConfigDialog({ open, onOpenChange }: { open: boolean; onO
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={handleSave}>Salvar</Button>
         </DialogFooter>
       </DialogContent>

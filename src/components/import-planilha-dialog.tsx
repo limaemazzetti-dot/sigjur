@@ -1,6 +1,13 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, FileSpreadsheet, AlertTriangle, Download } from "lucide-react";
@@ -24,7 +31,7 @@ function toISODate(v: unknown, order: DateOrder = "dmy"): string | null {
   if (v == null || v === "") return null;
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   const s = String(v).trim();
-  const br = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const br = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (br) {
     const a = Number(br[1]);
     const b = Number(br[2]);
@@ -45,7 +52,9 @@ function toISODate(v: unknown, order: DateOrder = "dmy"): string | null {
 function toNumberBR(v: unknown): number | null {
   if (v == null || v === "") return null;
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  let s = String(v).trim().replace(/[R$\s%]/g, "");
+  let s = String(v)
+    .trim()
+    .replace(/[R$\s%]/g, "");
   if (!s) return null;
   // Brazilian: 1.234.567,89 → 1234567.89 ; US: 1,234.56 → 1234.56
   const hasComma = s.includes(",");
@@ -85,7 +94,7 @@ function detectDateOrder(values: unknown[]): DateOrder {
   let dmy = 0;
   for (const value of values) {
     const s = String(value ?? "").trim();
-    const match = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-]\d{2,4}$/);
+    const match = s.match(/^(\d{1,2})[/-](\d{1,2})[/-]\d{2,4}$/);
     if (!match) continue;
     const a = Number(match[1]);
     const b = Number(match[2]);
@@ -95,7 +104,10 @@ function detectDateOrder(values: unknown[]): DateOrder {
   return mdy > dmy ? "mdy" : "dmy";
 }
 
-function findHeaderRow<T extends Record<string, unknown>>(sheetRows: unknown[][], columnMap: ColumnMap<T>) {
+function findHeaderRow<T extends Record<string, unknown>>(
+  sheetRows: unknown[][],
+  columnMap: ColumnMap<T>,
+) {
   let bestIndex = -1;
   let bestScore = 0;
   const aliases = Object.values(columnMap)
@@ -131,7 +143,11 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
   const [rowLineNumbers, setRowLineNumbers] = useState<number[]>([]);
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<{ done: number; total: number; errors: number }>({ done: 0, total: 0, errors: 0 });
+  const [progress, setProgress] = useState<{ done: number; total: number; errors: number }>({
+    done: 0,
+    total: 0,
+    errors: 0,
+  });
   const [errorList, setErrorList] = useState<Array<{ linha: number; motivo: string }>>([]);
 
   async function handleFile(f: File) {
@@ -147,7 +163,12 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
         wb = XLSX.read(buf, { type: "array", cellDates: true });
       }
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const sheetRows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: null, raw: false, blankrows: false });
+      const sheetRows = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+        header: 1,
+        defval: null,
+        raw: false,
+        blankrows: false,
+      });
       const headerIndex = findHeaderRow(sheetRows, columnMap);
       if (headerIndex < 0) {
         toast.error("Não encontrei a linha de cabeçalho da planilha");
@@ -165,7 +186,9 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
       setRawHeaders(headers);
 
       const headerByField: Partial<Record<keyof T & string, number>> = {};
-      for (const [field, aliases] of Object.entries(columnMap) as Array<[keyof T & string, string[]]>) {
+      for (const [field, aliases] of Object.entries(columnMap) as Array<
+        [keyof T & string, string[]]
+      >) {
         const normAliases = aliases.map(norm);
         const match = headers.findIndex((h) => normAliases.includes(norm(h)));
         if (match >= 0) headerByField[field] = match;
@@ -203,7 +226,9 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
           }
         }
         const row = transform ? transform(out) : (out as Partial<T>);
-        if (Object.values(row).some((value) => value !== "" && value !== null && value !== undefined)) {
+        if (
+          Object.values(row).some((value) => value !== "" && value !== null && value !== undefined)
+        ) {
           mapped.push(row);
           lineNumbers.push(headerIndex + idx + 2);
         }
@@ -233,7 +258,11 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
           errs.push({ linha: rowLineNumbers[i + k] ?? i + k + 2, motivo: reason });
         }
       });
-      setProgress({ done: Math.min(i + BATCH, rows.length), total: rows.length, errors: errs.length });
+      setProgress({
+        done: Math.min(i + BATCH, rows.length),
+        total: rows.length,
+        errors: errs.length,
+      });
     }
     setBusy(false);
     setErrorList(errs);
@@ -249,7 +278,9 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
 
   function downloadErrors() {
     if (errorList.length === 0) return;
-    const csv = "linha;motivo\n" + errorList.map((e) => `${e.linha};"${e.motivo.replace(/"/g, '""')}"`).join("\n");
+    const csv =
+      "linha;motivo\n" +
+      errorList.map((e) => `${e.linha};"${e.motivo.replace(/"/g, '""')}"`).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -284,14 +315,16 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">{title}</DialogTitle>
           <DialogDescription>
-            Aceita .xlsx, .xls e .csv (vírgula, ponto-e-vírgula ou tab). Datas em dd/mm/aaaa e valores em R$ são reconhecidos automaticamente.
+            Aceita .xlsx, .xls e .csv (vírgula, ponto-e-vírgula ou tab). Datas em dd/mm/aaaa e
+            valores em R$ são reconhecidos automaticamente.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="rounded-md border border-dashed border-border/60 p-6 text-center">
             <FileSpreadsheet className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
             <Label htmlFor="import-file" className="cursor-pointer text-sm">
-              Selecione um arquivo <span className="text-accent underline">.xlsx</span>, .xls ou .csv
+              Selecione um arquivo <span className="text-accent underline">.xlsx</span>, .xls ou
+              .csv
             </Label>
             <input
               id="import-file"
@@ -316,7 +349,9 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
                 </p>
                 <p className="text-primary">✓ Reconhecidas: {mapped.join(", ") || "—"}</p>
                 {unmapped.length > 0 && (
-                  <p className="text-muted-foreground">Não reconhecidas / vazias: {unmapped.join(", ")}</p>
+                  <p className="text-muted-foreground">
+                    Não reconhecidas / vazias: {unmapped.join(", ")}
+                  </p>
                 )}
               </div>
 
@@ -348,11 +383,16 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
               {busy && (
                 <div className="space-y-1">
                   <div className="h-2 rounded bg-secondary overflow-hidden">
-                    <div className="h-full bg-primary transition-all" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${(progress.done / progress.total) * 100}%` }}
+                    />
                   </div>
                   <p className="text-sm text-center">
                     Importando {progress.done}/{progress.total}…
-                    {progress.errors > 0 && <span className="text-rose-500"> ({progress.errors} erros)</span>}
+                    {progress.errors > 0 && (
+                      <span className="text-rose-500"> ({progress.errors} erros)</span>
+                    )}
                   </p>
                 </div>
               )}
@@ -377,11 +417,14 @@ export function ImportPlanilhaDialog<T extends Record<string, unknown>>({
               <div className="max-h-48 overflow-y-auto text-xs space-y-1">
                 {errorList.slice(0, 20).map((e, i) => (
                   <div key={i} className="border-t border-border/40 pt-1">
-                    <span className="font-mono text-muted-foreground">Linha {e.linha}:</span> {e.motivo}
+                    <span className="font-mono text-muted-foreground">Linha {e.linha}:</span>{" "}
+                    {e.motivo}
                   </div>
                 ))}
                 {errorList.length > 20 && (
-                  <p className="text-muted-foreground pt-2">…e mais {errorList.length - 20} erros. Baixe o CSV para ver todos.</p>
+                  <p className="text-muted-foreground pt-2">
+                    …e mais {errorList.length - 20} erros. Baixe o CSV para ver todos.
+                  </p>
                 )}
               </div>
             </div>

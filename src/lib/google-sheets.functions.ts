@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireEditorAccess } from "@/integrations/supabase/access-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 const SHEETS_GW = "https://connector-gateway.lovable.dev/google_sheets";
 const DRIVE_GW = "https://connector-gateway.lovable.dev/google_drive";
@@ -128,7 +130,7 @@ async function readSheetValues(spreadsheetId: string, range: string): Promise<st
 }
 
 // ---------- Value builders (por módulo) ----------
-type Ctx = { supabase: { from: (t: string) => any }; userId: string };
+type Ctx = { supabase: SupabaseClient<Database>; userId: string };
 
 async function buildValuesFor(
   modulo: "painel" | "lancamentos" | "processos" | "clientes" | "dre",

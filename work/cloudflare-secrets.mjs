@@ -1,7 +1,8 @@
 import fs from "node:fs";
 
 const env = Object.fromEntries(
-  fs.readFileSync(new URL("../.env", import.meta.url), "utf8")
+  fs
+    .readFileSync(new URL("../.env", import.meta.url), "utf8")
     .split(/\r?\n/)
     .map((line) => line.match(/^([A-Z0-9_]+)=(.*)$/))
     .filter(Boolean)

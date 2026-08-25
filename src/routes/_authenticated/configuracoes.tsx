@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -31,6 +31,9 @@ import {
 } from "@/lib/status-processo.functions";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
+  beforeLoad: () => {
+    throw redirect({ to: "/cadastros" });
+  },
   component: CadastrosPage,
 });
 

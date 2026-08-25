@@ -26,12 +26,15 @@ async function getPlatformLogo(): Promise<string | null> {
   return _logoPromise;
 }
 
-
 export function formatBRL(v: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
 
-export function exportToExcel(filename: string, rows: Record<string, unknown>[], sheetName = "Dados") {
+export function exportToExcel(
+  filename: string,
+  rows: Record<string, unknown>[],
+  sheetName = "Dados",
+) {
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
@@ -61,7 +64,6 @@ export async function exportToPdf(opts: {
       console.warn("Falha ao inserir logo:", e);
     }
   }
-
 
   doc.setDrawColor(200, 169, 106);
   doc.setLineWidth(1.2);

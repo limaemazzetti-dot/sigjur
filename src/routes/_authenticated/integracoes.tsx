@@ -21,8 +21,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Trash2, Plus, ExternalLink, Download, FileSpreadsheet, Search, Database, Save } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  RefreshCw,
+  Trash2,
+  Plus,
+  ExternalLink,
+  Download,
+  FileSpreadsheet,
+  Search,
+  Database,
+  Save,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/integracoes")({
   component: IntegracoesPage,
@@ -184,7 +200,8 @@ function IntegracoesPage() {
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Integrações</p>
         <h1 className="font-serif text-3xl mt-1">Sincronização com Google Sheets</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Configure quais módulos da barra lateral são gravados em quais abas — cada linha aponta para uma planilha e uma aba específica.
+          Configure quais módulos da barra lateral são gravados em quais abas — cada linha aponta
+          para uma planilha e uma aba específica.
         </p>
       </header>
 
@@ -196,10 +213,22 @@ function IntegracoesPage() {
             <span className="truncate">Sincronizações configuradas</span>
           </CardTitle>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-            <Button variant="ghost" size="sm" onClick={() => mappings.refetch()} disabled={mappings.isFetching} className="flex-1 sm:flex-none">
-              <RefreshCw className={`w-4 h-4 mr-1 ${mappings.isFetching ? "animate-spin" : ""}`} /> Atualizar
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => mappings.refetch()}
+              disabled={mappings.isFetching}
+              className="flex-1 sm:flex-none"
+            >
+              <RefreshCw className={`w-4 h-4 mr-1 ${mappings.isFetching ? "animate-spin" : ""}`} />{" "}
+              Atualizar
             </Button>
-            <Button size="sm" onClick={handleSyncAll} disabled={busy || (mappings.data ?? []).length === 0} className="flex-1 sm:flex-none">
+            <Button
+              size="sm"
+              onClick={handleSyncAll}
+              disabled={busy || (mappings.data ?? []).length === 0}
+              className="flex-1 sm:flex-none"
+            >
               <RefreshCw className="w-4 h-4 mr-1" /> Sincronizar tudo
             </Button>
           </div>
@@ -247,7 +276,9 @@ function IntegracoesPage() {
                   onClick={() => handleRun(m.id)}
                   disabled={runningId === m.id || busy}
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 mr-1 ${runningId === m.id ? "animate-spin" : ""}`} />
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 mr-1 ${runningId === m.id ? "animate-spin" : ""}`}
+                  />
                   Sincronizar
                 </Button>
                 <Button
@@ -277,10 +308,14 @@ function IntegracoesPage() {
             <div>
               <Label className="text-xs">Módulo</Label>
               <Select value={modulo} onValueChange={(v) => setModulo(v as Modulo)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {MODULOS.map((m) => (
-                    <SelectItem key={m} value={m}>{MODULO_LABEL[m]}</SelectItem>
+                    <SelectItem key={m} value={m}>
+                      {MODULO_LABEL[m]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -309,7 +344,9 @@ function IntegracoesPage() {
               </Button>
             </div>
             {spreadsheetId && (
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">ID: {spreadsheetId}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
+                ID: {spreadsheetId}
+              </p>
             )}
           </div>
 
@@ -318,10 +355,14 @@ function IntegracoesPage() {
               <Label className="text-xs">Aba de destino</Label>
               {availableTabs.length > 0 ? (
                 <Select value={sheetName} onValueChange={setSheetName}>
-                  <SelectTrigger><SelectValue placeholder="Selecione uma aba" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma aba" />
+                  </SelectTrigger>
                   <SelectContent>
                     {availableTabs.map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -345,11 +386,15 @@ function IntegracoesPage() {
             )}
           </div>
 
-          <Button onClick={handleAdd} disabled={busy || !spreadsheetId || !sheetName.trim() || !label.trim()}>
+          <Button
+            onClick={handleAdd}
+            disabled={busy || !spreadsheetId || !sheetName.trim() || !label.trim()}
+          >
             <Plus className="w-4 h-4 mr-2" /> Adicionar sincronização
           </Button>
           <p className="text-xs text-muted-foreground">
-            Ao sincronizar, o conteúdo anterior da aba é substituído pelos dados atuais do módulo. Se a aba não existir, ela é criada.
+            Ao sincronizar, o conteúdo anterior da aba é substituído pelos dados atuais do módulo.
+            Se a aba não existir, ela é criada.
           </p>
         </CardContent>
       </Card>
@@ -372,7 +417,11 @@ function IntegracoesPage() {
           </div>
           <div>
             <Label className="text-xs">Nome da aba</Label>
-            <Input value={importSheet} onChange={(e) => setImportSheet(e.target.value)} className="max-w-sm" />
+            <Input
+              value={importSheet}
+              onChange={(e) => setImportSheet(e.target.value)}
+              className="max-w-sm"
+            />
             <p className="text-xs text-muted-foreground mt-1">
               Colunas obrigatórias: <code>Data, Descrição, Valor, Tipo</code>. Opcionais:{" "}
               <code>Status, Categoria (código), Tipo honorário, Processo, Observações</code>.
@@ -455,8 +504,8 @@ function BackupsSection() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Guarda uma cópia completa (JSON) de todos os dados diretamente no banco. Baixe a qualquer momento para ter também
-          uma cópia local. É independente do backup no Google Sheets.
+          Guarda uma cópia completa (JSON) de todos os dados diretamente no banco. Baixe a qualquer
+          momento para ter também uma cópia local. É independente do backup no Google Sheets.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <Input

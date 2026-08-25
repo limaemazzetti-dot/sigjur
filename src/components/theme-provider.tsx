@@ -5,8 +5,8 @@ type Theme = "light" | "dark";
 export type AccentPreset = {
   id: string;
   label: string;
-  accent: string;      // hex
-  gradient: string;    // CSS linear-gradient value
+  accent: string; // hex
+  gradient: string; // CSS linear-gradient value
 };
 
 export const ACCENT_PRESETS: AccentPreset[] = [
@@ -18,7 +18,6 @@ export const ACCENT_PRESETS: AccentPreset[] = [
       "linear-gradient(90deg,#8A7346 0%,#A88848 18%,#C8A96A 40%,#D8BA82 55%,#C8A96A 72%,#A88848 88%,#7A6640 100%)",
   },
 ];
-
 
 type Ctx = {
   theme: Theme;
@@ -51,7 +50,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(theme);
-    try { localStorage.setItem(THEME_KEY, theme); } catch {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
       // ignore
     }
   }, [theme]);
@@ -71,20 +72,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--gradient-gold", preset.gradient);
     root.style.setProperty("--sidebar-primary", a);
     root.style.setProperty("--sidebar-ring", a);
-    root.style.setProperty(
-      "--sidebar-accent",
-      `color-mix(in srgb, ${a} 12%, #131314)`,
-    );
-    root.style.setProperty(
-      "--sidebar-border",
-      `color-mix(in srgb, ${a} 18%, transparent)`,
-    );
+    root.style.setProperty("--sidebar-accent", `color-mix(in srgb, ${a} 12%, #131314)`);
+    root.style.setProperty("--sidebar-border", `color-mix(in srgb, ${a} 18%, transparent)`);
 
-    try { localStorage.setItem(ACCENT_KEY, accentId); } catch {
+    try {
+      localStorage.setItem(ACCENT_KEY, accentId);
+    } catch {
       // ignore
     }
   }, [accentId]);
-
 
   return (
     <ThemeContext.Provider

@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { agendaProxima } from "@/lib/bi.functions";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlarmClock, CalendarClock, Gavel, Cake } from "lucide-react";
@@ -63,12 +69,18 @@ export function AgendaAlert() {
       const key = `${i.tipo}-${i.id}-${i.data}`;
       const storageKey = `notif-shown-${new Date().toISOString().slice(0, 10)}-${key}`;
       if (notifiedRef.current.has(key)) continue;
-      if (sessionStorage.getItem(storageKey)) { notifiedRef.current.add(key); continue; }
-      const when = i.diasRestantes < 0
-        ? `${Math.abs(i.diasRestantes)}d em atraso`
-        : i.diasRestantes === 0 ? "hoje"
-        : i.diasRestantes === 1 ? "amanhã"
-        : `em ${i.diasRestantes} dias`;
+      if (sessionStorage.getItem(storageKey)) {
+        notifiedRef.current.add(key);
+        continue;
+      }
+      const when =
+        i.diasRestantes < 0
+          ? `${Math.abs(i.diasRestantes)}d em atraso`
+          : i.diasRestantes === 0
+            ? "hoje"
+            : i.diasRestantes === 1
+              ? "amanhã"
+              : `em ${i.diasRestantes} dias`;
       try {
         new Notification(`${LABEL[i.tipo]} ${when}`, {
           body: [i.titulo, i.subtitulo].filter(Boolean).join(" — "),
@@ -76,7 +88,9 @@ export function AgendaAlert() {
         });
         sessionStorage.setItem(storageKey, "1");
         notifiedRef.current.add(key);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }, [urgentes, cfg.browserNotifications]);
 
@@ -104,26 +118,45 @@ export function AgendaAlert() {
                 key={`${i.tipo}-${i.id}`}
                 className={
                   "flex items-start gap-3 p-3 rounded-md border " +
-                  (vencido ? "border-destructive/50 bg-destructive/10" :
-                    hoje ? "border-accent/40 bg-accent/10" :
-                    "border-border")
+                  (vencido
+                    ? "border-destructive/50 bg-destructive/10"
+                    : hoje
+                      ? "border-accent/40 bg-accent/10"
+                      : "border-border")
                 }
               >
                 <Icon className="h-4 w-4 mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{i.titulo}</p>
-                  {i.subtitulo && <p className="text-xs text-muted-foreground truncate">{i.subtitulo}</p>}
+                  {i.subtitulo && (
+                    <p className="text-xs text-muted-foreground truncate">{i.subtitulo}</p>
+                  )}
                 </div>
                 <Badge variant={vencido ? "destructive" : "secondary"}>
-                  {vencido ? `${Math.abs(i.diasRestantes)}d atraso` : hoje ? "Hoje" : i.diasRestantes === 1 ? "Amanhã" : `${i.diasRestantes}d`}
+                  {vencido
+                    ? `${Math.abs(i.diasRestantes)}d atraso`
+                    : hoje
+                      ? "Hoje"
+                      : i.diasRestantes === 1
+                        ? "Amanhã"
+                        : `${i.diasRestantes}d`}
                 </Badge>
               </li>
             );
           })}
         </ul>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Depois</Button>
-          <Button onClick={() => { setOpen(false); navigate({ to: "/bi" }); }}>Abrir agenda</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Depois
+          </Button>
+          <Button
+            onClick={() => {
+              setOpen(false);
+              navigate({ to: "/bi" });
+            }}
+          >
+            Abrir agenda
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

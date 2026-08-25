@@ -18,7 +18,8 @@ export const agendaProxima = createServerFn({ method: "GET" })
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const iso = (d: Date) => d.toISOString().slice(0, 10);
-    const inFar = new Date(today); inFar.setDate(inFar.getDate() + 365);
+    const inFar = new Date(today);
+    inFar.setDate(inFar.getDate() + 365);
 
     const items: AgendaItem[] = [];
 
@@ -28,11 +29,15 @@ export const agendaProxima = createServerFn({ method: "GET" })
       .select("id, titulo, descricao, data_prazo, prioridade, processo_id, processos(autor, reu)")
       .eq("status", "aberto")
       .lte("data_prazo", iso(inFar));
-    for (const p of ((prazos ?? []) as unknown as Array<{
-      id: string; titulo: string; descricao: string | null; data_prazo: string;
-      prioridade: "baixa"|"media"|"alta"; processo_id: string | null;
+    for (const p of (prazos ?? []) as unknown as Array<{
+      id: string;
+      titulo: string;
+      descricao: string | null;
+      data_prazo: string;
+      prioridade: "baixa" | "media" | "alta";
+      processo_id: string | null;
       processos: { autor: string; reu: string } | null;
-    }>)) {
+    }>) {
       const d = new Date(p.data_prazo + "T00:00:00");
       const dias = Math.round((d.getTime() - today.getTime()) / 86400000);
       const isAudiencia = /audi[êe]ncia/i.test(p.titulo) || /audi[êe]ncia/i.test(p.descricao ?? "");
@@ -51,12 +56,20 @@ export const agendaProxima = createServerFn({ method: "GET" })
     // Aniversários / perícias próximas (7 dias)
     const { data: clientes } = await context.supabase
       .from("clientes" as never)
-      .select("id, nome, data_aniversario");
-    for (const c of ((clientes ?? []) as unknown as Array<{ id: string; nome: string; data_aniversario: string | null }>)) {
+      .select("id, nome, data_aniversario, fornecedor, observacoes");
+    for (const c of (clientes ?? []) as unknown as Array<{
+      id: string;
+      nome: string;
+      data_aniversario: string | null;
+      fornecedor: boolean | null;
+      observacoes: string | null;
+    }>) {
+      if (c.fornecedor || c.observacoes?.includes("[[SIGJUR:FORNECEDOR]]")) continue;
       if (!c.data_aniversario) continue;
       const m = c.data_aniversario.slice(5); // MM-DD
       const thisYear = new Date(`${today.getFullYear()}-${m}T00:00:00`);
-      const target = thisYear < today ? new Date(`${today.getFullYear() + 1}-${m}T00:00:00`) : thisYear;
+      const target =
+        thisYear < today ? new Date(`${today.getFullYear() + 1}-${m}T00:00:00`) : thisYear;
       const dias = Math.round((target.getTime() - today.getTime()) / 86400000);
       if (dias >= 0 && dias <= 7) {
         items.push({
@@ -97,7 +110,9 @@ export const biProcessos = createServerFn({ method: "GET" })
       const m = r.materia?.trim() || "Não informada";
       byMateria.set(m, (byMateria.get(m) ?? 0) + 1);
     }
-    const encerrados = rows.filter((r) => r.status === "julgado_procedente" || r.status === "julgado_improcedente");
+    const encerrados = rows.filter(
+      (r) => r.status === "julgado_procedente" || r.status === "julgado_improcedente",
+    );
     const procedentes = encerrados.filter((r) => r.status === "julgado_procedente").length;
     const taxaSucesso = encerrados.length > 0 ? (procedentes / encerrados.length) * 100 : 0;
     return {
@@ -133,12 +148,33 @@ export const biFinanceiro = createServerFn({ method: "POST" })
       .lt("data", endExclusive)
       .eq("status", "pago");
     if (error) throw new Error(error.message);
-    type L = { data: string; tipo: "entrada" | "saida"; valor: number; tipo_honorario: string | null };
+    type L = {
+      data: string;
+      tipo: "entrada" | "saida";
+      valor: number;
+      tipo_honorario: string | null;
+    };
     const items = (rows ?? []) as unknown as L[];
 
     // Buckets mensais entre inicio e fim
-    const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const buckets = new Map<string, { chave: string; nome: string; receita: number; despesa: number }>();
+    const MESES = [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez",
+    ];
+    const buckets = new Map<
+      string,
+      { chave: string; nome: string; receita: number; despesa: number }
+    >();
     const start = new Date(data.inicio + "T00:00:00");
     const end = new Date(data.fim + "T00:00:00");
     const cursor = new Date(start.getFullYear(), start.getMonth(), 1);

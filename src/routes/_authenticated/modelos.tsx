@@ -12,9 +12,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,12 +42,27 @@ export const Route = createFileRoute("/_authenticated/modelos")({
 });
 
 const VARIAVEIS = [
-  "{{nome}}", "{{tipo_pessoa}}", "{{nacionalidade}}", "{{cpf_cnpj}}", "{{rg}}",
-  "{{email}}", "{{telefone}}", "{{profissao}}", "{{endereco}}", "{{cidade}}",
-  "{{estado}}", "{{cep}}", "{{data_aniversario}}", "{{data_hoje}}",
-  "{{representante_nome}}", "{{representante_nacionalidade}}",
-  "{{representante_profissao}}", "{{representante_data_nascimento}}",
-  "{{representante_rg}}", "{{representante_cpf}}", "{{representante_parentesco}}",
+  "{{nome}}",
+  "{{tipo_pessoa}}",
+  "{{nacionalidade}}",
+  "{{cpf_cnpj}}",
+  "{{rg}}",
+  "{{email}}",
+  "{{telefone}}",
+  "{{profissao}}",
+  "{{endereco}}",
+  "{{cidade}}",
+  "{{estado}}",
+  "{{cep}}",
+  "{{data_aniversario}}",
+  "{{data_hoje}}",
+  "{{representante_nome}}",
+  "{{representante_nacionalidade}}",
+  "{{representante_profissao}}",
+  "{{representante_data_nascimento}}",
+  "{{representante_rg}}",
+  "{{representante_cpf}}",
+  "{{representante_parentesco}}",
 ];
 
 function ModelosPage() {
@@ -42,7 +76,13 @@ function ModelosPage() {
   });
 
   const mSave = useMutation({
-    mutationFn: (d: { id?: string; nome: string; tipo: string; conteudo: string; ativo: boolean }) => upsertTemplate({ data: d }),
+    mutationFn: (d: {
+      id?: string;
+      nome: string;
+      tipo: string;
+      conteudo: string;
+      ativo: boolean;
+    }) => upsertTemplate({ data: d }),
     onSuccess: () => {
       toast.success("Modelo salvo");
       qc.invalidateQueries({ queryKey: ["templates"] });
@@ -68,18 +108,33 @@ function ModelosPage() {
           <h1 className="font-serif text-3xl mt-1">Modelos</h1>
           <p className="text-sm text-muted-foreground mt-2">
             Crie modelos de contrato, procuração e outros documentos usando variáveis como{" "}
-            <code className="text-xs bg-muted px-1 rounded">{"{{nome}}"}</code>. Todo cliente salvo gera automaticamente os documentos a partir dos modelos ativos.
+            <code className="text-xs bg-muted px-1 rounded">{"{{nome}}"}</code>. Todo cliente salvo
+            gera automaticamente os documentos a partir dos modelos ativos.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
+        <Dialog
+          open={open}
+          onOpenChange={(o) => {
+            setOpen(o);
+            if (!o) setEditing(null);
+          }}
+        >
           <DialogTrigger asChild>
-            <Button size="sm" className="w-full sm:w-auto"><Plus className="w-4 h-4 mr-2" /> Novo modelo</Button>
+            <Button size="sm" className="w-full sm:w-auto">
+              <Plus className="w-4 h-4 mr-2" /> Novo modelo
+            </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto sm:max-w-[calc(100vw-2rem)] lg:max-w-3xl">
             <DialogHeader>
-              <DialogTitle className="font-serif text-2xl">{editing ? "Editar modelo" : "Novo modelo"}</DialogTitle>
+              <DialogTitle className="font-serif text-2xl">
+                {editing ? "Editar modelo" : "Novo modelo"}
+              </DialogTitle>
             </DialogHeader>
-            <TemplateForm initial={editing} onSubmit={(d) => mSave.mutate(d)} loading={mSave.isPending} />
+            <TemplateForm
+              initial={editing}
+              onSubmit={(d) => mSave.mutate(d)}
+              loading={mSave.isPending}
+            />
           </DialogContent>
         </Dialog>
       </header>
@@ -87,39 +142,60 @@ function ModelosPage() {
       <Card className="border-border/60 overflow-hidden">
         <CardContent className="p-0">
           <div className="hidden sm:block overflow-x-auto">
-          <Table className="min-w-[520px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Ativo</TableHead>
-                <TableHead className="w-24 text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.isLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Carregando…</TableCell></TableRow>
-              ) : list.data && list.data.length > 0 ? (
-                list.data.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">{t.nome}</TableCell>
-                    <TableCell className="text-sm capitalize">{t.tipo}</TableCell>
-                    <TableCell className="text-sm">{t.ativo ? "Sim" : "Não"}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(t); setOpen(true); }}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover ${t.nome}?`)) mDel.mutate(t.id); }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+            <Table className="min-w-[520px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Ativo</TableHead>
+                  <TableHead className="w-24 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {list.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      Carregando…
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Nenhum modelo cadastrado.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ) : list.data && list.data.length > 0 ? (
+                  list.data.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-medium">{t.nome}</TableCell>
+                      <TableCell className="text-sm capitalize">{t.tipo}</TableCell>
+                      <TableCell className="text-sm">{t.ativo ? "Sim" : "Não"}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditing(t);
+                            setOpen(true);
+                          }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            if (confirm(`Remover ${t.nome}?`)) mDel.mutate(t.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                      Nenhum modelo cadastrado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
           <div className="sm:hidden divide-y divide-border/60">
             {list.isLoading ? (
@@ -130,13 +206,28 @@ function ModelosPage() {
                   <div className="flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate">{t.nome}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{t.tipo} · {t.ativo ? "Ativo" : "Inativo"}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {t.tipo} · {t.ativo ? "Ativo" : "Inativo"}
+                      </p>
                     </div>
                     <div className="flex shrink-0 gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(t); setOpen(true); }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditing(t);
+                          setOpen(true);
+                        }}
+                      >
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover ${t.nome}?`)) mDel.mutate(t.id); }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (confirm(`Remover ${t.nome}?`)) mDel.mutate(t.id);
+                        }}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -144,7 +235,9 @@ function ModelosPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-10 text-muted-foreground text-sm px-4">Nenhum modelo cadastrado.</div>
+              <div className="text-center py-10 text-muted-foreground text-sm px-4">
+                Nenhum modelo cadastrado.
+              </div>
             )}
           </div>
         </CardContent>
@@ -159,7 +252,13 @@ function TemplateForm({
   loading,
 }: {
   initial: TemplateRow | null;
-  onSubmit: (d: { id?: string; nome: string; tipo: string; conteudo: string; ativo: boolean }) => void;
+  onSubmit: (d: {
+    id?: string;
+    nome: string;
+    tipo: string;
+    conteudo: string;
+    ativo: boolean;
+  }) => void;
   loading: boolean;
 }) {
   const [form, setForm] = useState({
@@ -170,16 +269,28 @@ function TemplateForm({
     ativo: initial?.ativo ?? true,
   });
   return (
-    <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSubmit(form); }}>
+    <form
+      className="space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(form);
+      }}
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label>Nome</Label>
-          <Input required value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
+          <Input
+            required
+            value={form.nome}
+            onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+          />
         </div>
         <div>
           <Label>Tipo</Label>
           <Select value={form.tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="contrato">Contrato</SelectItem>
               <SelectItem value="procuracao">Procuração</SelectItem>
@@ -197,7 +308,10 @@ function TemplateForm({
               key={v}
               type="button"
               className="text-xs bg-muted hover:bg-muted/70 px-2 py-1 rounded font-mono"
-              onClick={() => { navigator.clipboard.writeText(v); toast.success(`${v} copiado`); }}
+              onClick={() => {
+                navigator.clipboard.writeText(v);
+                toast.success(`${v} copiado`);
+              }}
             >
               {v}
             </button>

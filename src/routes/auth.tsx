@@ -33,7 +33,6 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
-  const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -41,6 +40,10 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session && mode === "auth") navigate({ to: "/resumo", replace: true });
     });
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setMode("reset");
+    });
+    return () => listener.subscription.unsubscribe();
   }, [navigate, mode]);
 
   async function handleSignIn(e: React.FormEvent) {
@@ -57,11 +60,13 @@ function AuthPage() {
     e.preventDefault();
     if (!resetEmail) return toast.error("Informe o e-mail cadastrado.");
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Código enviado. Verifique seu e-mail.");
-    setMode("reset");
+    toast.success("Enviamos um link de recuperação. Abra-o no seu e-mail para criar a nova senha.");
+    setMode("auth");
   }
 
   async function handleReset(e: React.FormEvent) {
@@ -69,18 +74,13 @@ function AuthPage() {
     if (newPassword.length < 6) return toast.error("A senha deve ter ao menos 6 caracteres.");
     if (newPassword !== confirmPassword) return toast.error("As senhas não conferem.");
     setLoading(true);
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email: resetEmail,
-      token: code.trim(),
-      type: "recovery",
-    });
-    if (verifyError) {
-      setLoading(false);
-      return toast.error("Código inválido ou expirado.");
-    }
     const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
     setLoading(false);
-    if (updateError) return toast.error(updateError.message);
+    if (updateError) {
+      return toast.error(
+        "O link de recuperação expirou. Solicite um novo link e abra-o neste navegador.",
+      );
+    }
     toast.success("Senha redefinida. Entrando...");
     navigate({ to: "/resumo", replace: true });
   }
@@ -207,7 +207,7 @@ function AuthPage() {
                 Redefinir<span style={{ color: GOLD }}>.</span>
               </h1>
               <p className="text-sm text-[color:var(--gold-light)]/70 mb-8">
-                Informe seu e-mail e enviaremos um código.
+                Informe seu e-mail e enviaremos um link seguro para criar a nova senha.
               </p>
               <form onSubmit={handleSendCode} className="space-y-5">
                 <div>
@@ -233,7 +233,7 @@ function AuthPage() {
                       color: INK,
                     }}
                   >
-                    {loading ? "Enviando..." : "Enviar Código"}
+                    {loading ? "Enviando..." : "Enviar link"}
                   </button>
                 </div>
                 <p className="text-center pt-2">
@@ -258,23 +258,9 @@ function AuthPage() {
                 Nova senha<span style={{ color: GOLD }}>.</span>
               </h1>
               <p className="text-sm text-[color:var(--gold-light)]/70 mb-8">
-                Código enviado para <span className="text-[color:var(--gold)]">{resetEmail}</span>
+                Defina sua nova senha para concluir a recuperação de acesso.
               </p>
               <form onSubmit={handleReset} className="space-y-5">
-                <div>
-                  <label className={labelCls}>Código</label>
-                  <div className={fieldWrap} style={fieldStyle}>
-                    <input
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      required
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      placeholder="······"
-                      className="w-full bg-transparent px-2 text-[color:var(--gold-light)] tracking-[0.5em] text-center text-lg focus:outline-none placeholder:text-[color:var(--gold)]/30"
-                    />
-                  </div>
-                </div>
                 <div>
                   <label className={labelCls}>Nova senha</label>
                   <div className={fieldWrap} style={fieldStyle}>
@@ -322,7 +308,7 @@ function AuthPage() {
                     onClick={() => setMode("forgot")}
                     className="text-[color:var(--gold-light)]/80 hover:text-[color:var(--gold-light)] underline underline-offset-4"
                   >
-                    Reenviar código
+                    Solicitar novo link
                   </button>
                   <button
                     type="button"

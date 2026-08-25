@@ -1,9 +1,5 @@
 function normalizeSearch(value) {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLocaleLowerCase("pt-BR")
-    .trim();
+  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLocaleLowerCase("pt-BR").trim();
 }
 
 function matchesProcessoSearch(processo, rawSearch) {

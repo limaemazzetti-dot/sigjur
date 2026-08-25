@@ -71,8 +71,14 @@ export function DocumentosClienteDialog({
           <DialogTitle className="font-serif text-2xl">Kit BPC/LOAS — {clienteNome}</DialogTitle>
         </DialogHeader>
         <div className="flex justify-end">
-          <Button size="sm" variant="outline" onClick={() => mRegen.mutate()} disabled={mRegen.isPending}>
-            <RefreshCw className="w-4 h-4 mr-2" /> {mRegen.isPending ? "Gerando..." : "Regerar documento"}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => mRegen.mutate()}
+            disabled={mRegen.isPending}
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />{" "}
+            {mRegen.isPending ? "Gerando..." : "Regerar documento"}
           </Button>
         </div>
 
@@ -85,13 +91,26 @@ export function DocumentosClienteDialog({
         ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2 justify-end">
-              <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(documento.conteudo); toast.success("Copiado"); }}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(documento.conteudo);
+                  toast.success("Copiado");
+                }}
+              >
                 <Copy className="w-4 h-4 mr-2" /> Copiar texto
               </Button>
               <Button size="sm" onClick={downloadDocx} disabled={!cliente.data}>
                 <FileType2 className="w-4 h-4 mr-2" /> Baixar DOCX preenchido
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remover este documento?")) mDel.mutate(documento.id); }}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  if (confirm("Remover este documento?")) mDel.mutate(documento.id);
+                }}
+              >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>

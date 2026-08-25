@@ -1,11 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import {
-  deletePlanoContas,
-  listPlanoContas,
-  upsertPlanoContas,
-} from "@/lib/lancamentos.functions";
+import { deletePlanoContas, listPlanoContas, upsertPlanoContas } from "@/lib/lancamentos.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Power } from "lucide-react";
 import { toast } from "sonner";
 
@@ -77,8 +68,7 @@ function PlanoContasPage() {
   });
 
   const mDelete = useMutation({
-    mutationFn: (v: { id: string; master_password: string }) =>
-      deletePlanoContas({ data: v }),
+    mutationFn: (v: { id: string; master_password: string }) => deletePlanoContas({ data: v }),
     onSuccess: () => {
       toast.success("Categoria removida");
       qc.invalidateQueries({ queryKey: ["plano-contas"] });
@@ -115,9 +105,7 @@ function PlanoContasPage() {
     setOpen(true);
   }
   function askDelete(c: Cat) {
-    const pwd = window.prompt(
-      `Excluir a categoria "${c.nome}"? Digite a senha master:`,
-    );
+    const pwd = window.prompt(`Excluir a categoria "${c.nome}"? Digite a senha master:`);
     if (pwd === null) return;
     if (!pwd.trim()) {
       toast.error("Senha obrigatória");
@@ -140,9 +128,7 @@ function PlanoContasPage() {
     <div className="p-4 sm:p-6 lg:p-10 space-y-6 max-w-5xl mx-auto w-full">
       <header className="grid grid-cols-[minmax(0,1fr)] items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            Financeiro
-          </p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Financeiro</p>
           <h1 className="font-serif text-3xl mt-1">Cadastro de contas</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Categorias usadas nos lançamentos e no DRE.
@@ -317,9 +303,7 @@ function CategoriaForm({
         <Label>Tipo</Label>
         <Select
           value={form.tipo}
-          onValueChange={(v) =>
-            setForm((f) => ({ ...f, tipo: v as FormState["tipo"] }))
-          }
+          onValueChange={(v) => setForm((f) => ({ ...f, tipo: v as FormState["tipo"] }))}
         >
           <SelectTrigger>
             <SelectValue />
@@ -332,11 +316,7 @@ function CategoriaForm({
         </Select>
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading
-          ? "Salvando..."
-          : form.id
-            ? "Salvar alterações"
-            : "Criar categoria"}
+        {loading ? "Salvando..." : form.id ? "Salvar alterações" : "Criar categoria"}
       </Button>
     </form>
   );

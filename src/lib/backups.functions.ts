@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireEditorAccess } from "@/integrations/supabase/access-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 const TABLES = [
   "clientes",
@@ -17,12 +19,12 @@ const TABLES = [
   "sync_mappings",
 ] as const;
 
-async function dumpAll(supabase: any): Promise<Record<string, any[]>> {
-  const out: Record<string, any[]> = {};
+async function dumpAll(supabase: SupabaseClient<Database>): Promise<Record<string, unknown[]>> {
+  const out: Record<string, unknown[]> = {};
   for (const t of TABLES) {
     const { data, error } = await supabase.from(t).select("*");
     if (error) throw new Error(`${t}: ${error.message}`);
-    out[t] = data ?? [];
+    out[t] = (data ?? []) as unknown[];
   }
   return out;
 }
@@ -40,7 +42,7 @@ export const createBackupSnapshot = createServerFn({ method: "POST" })
       .insert({
         tag: data.tag ?? `Backup ${new Date().toLocaleString("pt-BR")}`,
         size_bytes: json.length,
-        data: dump as any,
+        data: dump as unknown as Json,
         created_by: context.userId,
       })
       .select("id, created_at, tag, size_bytes")
@@ -86,5 +88,5 @@ export const exportBackupNow = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const dump = await dumpAll(context.supabase);
-    return { data: dump as any };
+    return { data: dump as unknown as Json };
   });

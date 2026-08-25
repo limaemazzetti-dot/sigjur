@@ -4,7 +4,10 @@ import jsPDF from "jspdf";
 import logoBlack from "@/assets/lima-mazzetti-logo-black.png";
 
 function sanitizeFilename(s: string) {
-  return s.replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
+  return s
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -21,9 +24,7 @@ export async function downloadDocumentoAsDocx(nome: string, conteudo: string) {
       return new Paragraph({ children: [new TextRun("")] });
     }
     // Título principal (linhas curtas, todas maiúsculas): centralizado + negrito
-    const isAllUpper =
-      trimmed === trimmed.toUpperCase() &&
-      /[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ]/.test(trimmed);
+    const isAllUpper = trimmed === trimmed.toUpperCase() && /[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ]/.test(trimmed);
     if (isAllUpper && trimmed.length < 90) {
       return new Paragraph({
         alignment: AlignmentType.CENTER,
@@ -139,8 +140,7 @@ export async function downloadDocumentoAsPdf(nome: string, conteudo: string) {
       y += lineHeight / 2;
       continue;
     }
-    const isAllUpper =
-      trimmed === trimmed.toUpperCase() && /[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ]/.test(trimmed);
+    const isAllUpper = trimmed === trimmed.toUpperCase() && /[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ]/.test(trimmed);
     const isTitle = isAllUpper && trimmed.length < 90;
 
     if (isTitle) {

@@ -204,6 +204,35 @@ export const deleteCliente = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, requireEditorAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { count: processosComoCliente, error: processoError } = await context.supabase
+      .from("processos" as never)
+      .select("id", { count: "exact", head: true })
+      .eq("cliente_id", data.id);
+    if (processoError) throw new Error(processoError.message);
+
+    const { count: processosComoEnvolvido, error: envolvidoError } = await context.supabase
+      .from("processos" as never)
+      .select("id", { count: "exact", head: true })
+      .eq("outro_envolvido_cliente_id", data.id);
+    if (envolvidoError) throw new Error(envolvidoError.message);
+
+    const { count: lancamentos, error: lancamentoError } = await context.supabase
+      .from("lancamentos" as never)
+      .select("id", { count: "exact", head: true })
+      .eq("fornecedor_id", data.id);
+    if (lancamentoError) throw new Error(lancamentoError.message);
+
+    const processosVinculados = (processosComoCliente ?? 0) + (processosComoEnvolvido ?? 0);
+    const lancamentosVinculados = lancamentos ?? 0;
+    if (processosVinculados || lancamentosVinculados) {
+      const partes = [
+        processosVinculados && `${processosVinculados} processo(s)`,
+        lancamentosVinculados && `${lancamentosVinculados} lançamento(s) financeiro(s)`,
+      ].filter(Boolean);
+      throw new Error(
+        `Este cadastro possui ${partes.join(" e ")} vinculado(s). Reatribua os registros antes de excluí-lo para preservar o histórico.`,
+      );
+    }
     const { error } = await context.supabase
       .from("clientes" as never)
       .delete()

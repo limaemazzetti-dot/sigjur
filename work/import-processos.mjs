@@ -16,7 +16,9 @@ function parseEnv(text) {
 }
 
 function clean(value) {
-  const text = String(value ?? "").replace(/\s+/g, " ").trim();
+  const text = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
   return text || null;
 }
 
@@ -44,7 +46,9 @@ function cleanFolder(value) {
 function numberOrNull(value) {
   if (value == null || value === "") return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  let text = String(value).trim().replace(/[R$%\s]/g, "");
+  let text = String(value)
+    .trim()
+    .replace(/[R$%\s]/g, "");
   if (!text) return null;
   if (text.includes(",") && text.includes(".")) text = text.replace(/\./g, "").replace(",", ".");
   else if (text.includes(",")) text = text.replace(",", ".");
@@ -60,7 +64,8 @@ function percentageOrNull(value) {
 
 function dateOrNull(value) {
   if (!value) return null;
-  if (value instanceof Date && !Number.isNaN(value.valueOf())) return value.toISOString().slice(0, 10);
+  if (value instanceof Date && !Number.isNaN(value.valueOf()))
+    return value.toISOString().slice(0, 10);
   const text = String(value).trim();
   const iso = text.match(/^(\d{4}-\d{2}-\d{2})/);
   if (iso) return iso[1];
@@ -101,7 +106,10 @@ function processStatus(value) {
 function sameSideRepresentative(qualification, clientQualification) {
   const other = normalized(qualification);
   const client = normalized(clientQualification);
-  return client.includes("menor") || ["mae", "pai", "representante", "responsavel", "procurador"].includes(other);
+  return (
+    client.includes("menor") ||
+    ["mae", "pai", "representante", "responsavel", "procurador"].includes(other)
+  );
 }
 
 function rowKey(row) {
@@ -134,7 +142,12 @@ async function rest(path, { method = "GET", body, prefer } = {}) {
 const csvText = await fs.readFile(csvPath, "utf8");
 const workbook = XLSX.read(csvText, { type: "string", cellDates: true, raw: true });
 const sheet = workbook.Sheets[workbook.SheetNames[0]];
-const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: true, blankrows: false });
+const rows = XLSX.utils.sheet_to_json(sheet, {
+  header: 1,
+  defval: null,
+  raw: true,
+  blankrows: false,
+});
 const headerIndex = rows.findIndex((row) => row.some((cell) => clean(cell) === "Nº do Processo"));
 if (headerIndex < 0) throw new Error("Cabeçalho da planilha não encontrado");
 
@@ -152,7 +165,9 @@ for (let index = headerIndex + 1; index < rows.length; index += 1) {
   const outroQualificacao = clean(row[15]);
   const otherIsRepresentative = sameSideRepresentative(outroQualificacao, clienteQualificacao);
   const otherParty = otherIsRepresentative ? null : outroEnvolvido;
-  const clientIsDefendant = ["reu", "requerido", "reclamado"].some((role) => normalized(clienteQualificacao).includes(role));
+  const clientIsDefendant = ["reu", "requerido", "reclamado"].some((role) =>
+    normalized(clienteQualificacao).includes(role),
+  );
 
   parsedRows.push({
     source_line: index + 1,
@@ -160,8 +175,8 @@ for (let index = headerIndex + 1; index < rows.length; index += 1) {
     cliente_tipo: normalized(row[7]).includes("juridica") ? "pj" : "pf",
     numero_cnj: numeroCnj,
     pasta: cleanFolder(row[2]),
-    autor: clientIsDefendant ? otherParty ?? "—" : clienteNome,
-    reu: clientIsDefendant ? clienteNome : otherParty ?? "—",
+    autor: clientIsDefendant ? (otherParty ?? "—") : clienteNome,
+    reu: clientIsDefendant ? clienteNome : (otherParty ?? "—"),
     status: processStatus(row[3]),
     materia: clean(row[6]),
     tipo_acao: tipoAcao,
@@ -210,7 +225,8 @@ const [ownerProfiles, existingClients, existingProcesses] = await Promise.all([
   rest("clientes?select=id,nome,tipo"),
   rest("processos?select=id,numero_cnj,tipo_acao,data_inicio,cliente_id,autor"),
 ]);
-if (ownerProfiles.length !== 1) throw new Error("Usuário proprietário não encontrado de forma única");
+if (ownerProfiles.length !== 1)
+  throw new Error("Usuário proprietário não encontrado de forma única");
 const ownerId = ownerProfiles[0].id;
 
 const clientsByName = new Map(existingClients.map((client) => [normalized(client.nome), client]));
@@ -247,7 +263,8 @@ const summary = {
   clients_to_insert: clientsToInsert.length,
   existing_processes: existingProcesses.length,
   processes_to_insert: newSourceRows.length,
-  open_deadlines_with_date: newSourceRows.filter((row) => row.prazo_em_aberto && row.data_prazo).length,
+  open_deadlines_with_date: newSourceRows.filter((row) => row.prazo_em_aberto && row.data_prazo)
+    .length,
 };
 
 if (!apply) {
@@ -283,4 +300,10 @@ const [finalClients, finalProcesses] = await Promise.all([
   rest("clientes?select=id"),
   rest("processos?select=id"),
 ]);
-console.log(JSON.stringify({ ...summary, final_clients: finalClients.length, final_processes: finalProcesses.length }, null, 2));
+console.log(
+  JSON.stringify(
+    { ...summary, final_clients: finalClients.length, final_processes: finalProcesses.length },
+    null,
+    2,
+  ),
+);

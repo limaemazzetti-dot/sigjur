@@ -62,7 +62,10 @@ function enhanceTable(table: HTMLTableElement) {
 
       const onPointerMove = (moveEvent: PointerEvent) => {
         const nextWidths = [...initialWidths];
-        nextWidths[columnIndex] = Math.max(MIN_COLUMN_WIDTH, initialWidth + moveEvent.clientX - startX);
+        nextWidths[columnIndex] = Math.max(
+          MIN_COLUMN_WIDTH,
+          initialWidth + moveEvent.clientX - startX,
+        );
         setWidths(table, nextWidths);
       };
 
