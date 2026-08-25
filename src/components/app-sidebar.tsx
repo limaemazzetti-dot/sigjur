@@ -132,8 +132,10 @@ export function AppSidebar() {
       <SidebarContent>
         {groups.map((g) => {
           const items = g.items.filter((item) => {
-            if (me?.isAdmin) return true;
-            if (!me?.allowedPages) return false;
+            // Enquanto o perfil é carregado, o menu não deve desaparecer.
+            // E, para usuários antigos, a ausência de linhas de permissão
+            // significa acesso padrão a todas as abas (mesma regra do layout).
+            if (!me || me.isAdmin || !me.pagePermissionsConfigured) return true;
             return me.allowedPages.includes(item.url);
           });
           if (items.length === 0) return null;
