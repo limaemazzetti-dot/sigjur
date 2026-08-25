@@ -71,6 +71,7 @@ export const getMe = createServerFn({ method: "GET" })
       accessLevel: context.accessLevel,
       canEdit: context.accessLevel === "admin" || context.accessLevel === "editor",
       allowedPages: (perms ?? []).map((p) => p.page as string),
+      pagePermissionsConfigured: (perms ?? []).length > 0,
     };
   });
 
@@ -97,11 +98,15 @@ export const setUserPages = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_page_permissions").delete().eq("user_id", data.user_id);
-    if (data.pages.length > 0) {
-      const rows = data.pages.map((page) => ({ user_id: data.user_id, page }));
-      const { error } = await supabaseAdmin.from("user_page_permissions").insert(rows);
-      if (error) throw new Error(error.message);
-    }
+    // A ausência de configuração significa acesso padrão às telas, o que mantém
+    // usuários antigos funcionando. O marcador preserva a decisão explícita de
+    // um administrador que deseje não liberar nenhuma tela a um usuário.
+    const rows =
+      data.pages.length > 0
+        ? data.pages.map((page) => ({ user_id: data.user_id, page }))
+        : [{ user_id: data.user_id, page: "__none__" }];
+    const { error } = await supabaseAdmin.from("user_page_permissions").insert(rows);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 

@@ -33,7 +33,10 @@ function AuthenticatedLayout() {
     (page) => location.pathname === page.path || location.pathname.startsWith(`${page.path}/`),
   );
   const pageAllowed =
-    !currentPage || me?.isAdmin || (me?.allowedPages ?? []).includes(currentPage.path);
+    !currentPage ||
+    me?.isAdmin ||
+    !me?.pagePermissionsConfigured ||
+    (me?.allowedPages ?? []).includes(currentPage.path);
 
   function explainReadOnly() {
     toast.info(
