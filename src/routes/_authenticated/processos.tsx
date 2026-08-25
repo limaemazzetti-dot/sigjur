@@ -294,7 +294,7 @@ function ProcessosPage() {
                 <Plus className="w-4 h-4 mr-2" /> Novo processo
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-none overflow-visible">
+            <DialogContent className="max-w-3xl max-h-none overflow-visible overflow-y-visible">
               <DialogHeader>
                 <DialogTitle className="font-serif text-2xl">Novo processo</DialogTitle>
               </DialogHeader>
