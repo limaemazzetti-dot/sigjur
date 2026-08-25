@@ -683,7 +683,6 @@ function ProcessoForm({
   const totalHonorarios =
     (Number(form.honorarios_valor ?? 0) || 0) +
     honorariosPercentualValor +
-    (Number(form.sucumbencias_valor ?? 0) || 0) +
     sucumbenciasPercentualValor;
   return (
     <form
@@ -1040,18 +1039,9 @@ function ProcessoForm({
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label>Sucumbências em R$</Label>
-              <CurrencyInput
-                value={form.sucumbencias_valor}
-                onValueChange={(value) => set("sucumbencias_valor", value)}
-              />
-            </div>
-            <div>
-              <Label>Total em Honorários (R$)</Label>
-              <Input readOnly value={formatBRL(totalHonorarios)} className="bg-muted" />
-            </div>
+          <div>
+            <Label>Total em Honorários (R$)</Label>
+            <Input readOnly value={formatBRL(totalHonorarios)} className="bg-muted" />
           </div>
           <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-4">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -1061,7 +1051,8 @@ function ProcessoForm({
               {formatBRL(totalHonorarios)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Honorários de entrada, percentual sobre o acordo/sentença e sucumbências.
+              Honorários em R$, honorários em % e sucumbências em %, calculados sobre o
+              acordo/sentença.
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
