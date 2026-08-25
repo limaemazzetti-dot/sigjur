@@ -172,9 +172,7 @@ function ProcessosPage() {
       titulo: "Relatório de Processos",
       subtitulo:
         `${list.data.length} processos` +
-        (statusFilter !== "all"
-          ? ` — ${statusLabels[statusFilter] ?? statusFilter}`
-          : ""),
+        (statusFilter !== "all" ? ` — ${statusLabels[statusFilter] ?? statusFilter}` : ""),
       columns: [
         { header: "Nº CNJ", dataKey: "cnj" },
         { header: "Autor / Responsável", dataKey: "autor" },

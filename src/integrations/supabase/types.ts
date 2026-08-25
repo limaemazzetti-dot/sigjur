@@ -104,9 +104,30 @@ export type Database = {
         Relationships: [];
       };
       status_processo_opcoes: {
-        Row: { ativo: boolean; codigo: string; created_at: string; id: string; nome: string; updated_at: string };
-        Insert: { ativo?: boolean; codigo: string; created_at?: string; id?: string; nome: string; updated_at?: string };
-        Update: { ativo?: boolean; codigo?: string; created_at?: string; id?: string; nome?: string; updated_at?: string };
+        Row: {
+          ativo: boolean;
+          codigo: string;
+          created_at: string;
+          id: string;
+          nome: string;
+          updated_at: string;
+        };
+        Insert: {
+          ativo?: boolean;
+          codigo: string;
+          created_at?: string;
+          id?: string;
+          nome: string;
+          updated_at?: string;
+        };
+        Update: {
+          ativo?: boolean;
+          codigo?: string;
+          created_at?: string;
+          id?: string;
+          nome?: string;
+          updated_at?: string;
+        };
         Relationships: [];
       };
       cliente_vinculos: {

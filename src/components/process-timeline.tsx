@@ -1,19 +1,27 @@
-import { Check, CircleDot, Gavel, Archive, PauseCircle, Handshake, ScrollText, FileText, Scale, Repeat2 } from "lucide-react";
+import {
+  Check,
+  CircleDot,
+  Gavel,
+  Archive,
+  PauseCircle,
+  Handshake,
+  ScrollText,
+  FileText,
+  Scale,
+  Repeat2,
+} from "lucide-react";
 import { STATUS_LABEL } from "@/lib/processos.functions";
 import { Card, CardContent } from "@/components/ui/card";
 
 type Status = string;
 
 // Linear "happy path" fase-a-fase
-const PIPELINE: Status[] = [
-  "inicial",
-  "em_andamento",
-  "recurso",
-  "execucao",
-  "concluso_sentenca",
-];
+const PIPELINE: Status[] = ["inicial", "em_andamento", "recurso", "execucao", "concluso_sentenca"];
 
-const TERMINAL: Record<string, { label: string; icon: typeof Gavel; tone: "gold" | "muted" | "danger" }> = {
+const TERMINAL: Record<
+  string,
+  { label: string; icon: typeof Gavel; tone: "gold" | "muted" | "danger" }
+> = {
   julgado_procedente: { label: "Julgado procedente", icon: Gavel, tone: "gold" },
   julgado_improcedente: { label: "Julgado improcedente", icon: Gavel, tone: "danger" },
   acordo: { label: "Acordo firmado", icon: Handshake, tone: "gold" },
@@ -47,11 +55,7 @@ export function ProcessTimeline({
 }) {
   const terminal = TERMINAL[status];
   const idx = PIPELINE.indexOf(status);
-  const progress = terminal
-    ? 100
-    : idx >= 0
-      ? Math.round(((idx + 1) / PIPELINE.length) * 100)
-      : 10;
+  const progress = terminal ? 100 : idx >= 0 ? Math.round(((idx + 1) / PIPELINE.length) * 100) : 10;
 
   return (
     <Card className="border-border/60 overflow-hidden">

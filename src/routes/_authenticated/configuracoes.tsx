@@ -121,24 +121,141 @@ function StatusManager({ canEdit }: { canEdit: boolean }) {
   const qc = useQueryClient();
   const [nome, setNome] = useState("");
   const [editing, setEditing] = useState<{ id: string; nome: string } | null>(null);
-  const list = useQuery({ queryKey: ["status-processo", "all"], queryFn: () => listStatusProcesso({ data: { incluir_inativos: true } }) });
+  const list = useQuery({
+    queryKey: ["status-processo", "all"],
+    queryFn: () => listStatusProcesso({ data: { incluir_inativos: true } }),
+  });
   const refresh = () => qc.invalidateQueries({ queryKey: ["status-processo"] });
-  const add = useMutation({ mutationFn: () => addStatusProcesso({ data: { nome } }), onSuccess: () => { setNome(""); refresh(); toast.success("Status adicionado"); }, onError: (e: Error) => toast.error(e.message) });
-  const save = useMutation({ mutationFn: (item: { id: string; nome: string; ativo: boolean }) => updateStatusProcesso({ data: item }), onSuccess: () => { setEditing(null); refresh(); toast.success("Status atualizado"); }, onError: (e: Error) => toast.error(e.message) });
-  const remove = useMutation({ mutationFn: (id: string) => deleteStatusProcesso({ data: { id } }), onSuccess: () => { refresh(); toast.success("Status excluído"); }, onError: (e: Error) => toast.error(e.message) });
-  return <Card><CardContent className="p-5 space-y-4">
-    <p className="text-sm text-muted-foreground">Os status cadastrados aqui aparecem nos filtros e nos formulários de processos. Um status usado em processo não pode ser excluído: desative-o ou troque os processos antes.</p>
-    <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (nome.trim()) add.mutate(); else toast.error("Digite o nome do status."); }}>
-      <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Novo status" disabled={!canEdit} />
-      <Button type="submit" disabled={!canEdit || add.isPending}><Plus className="size-4 mr-2" />Adicionar</Button>
-    </form>
-    <div className="divide-y divide-border/60">{list.data?.map((item) => <div key={item.id} className="flex items-center justify-between gap-2 py-2">
-      {editing?.id === item.id ? <Input autoFocus value={editing.nome} onChange={(e) => setEditing({ ...editing, nome: e.target.value })} /> : <span className={item.ativo ? "" : "text-muted-foreground line-through"}>{item.nome}</span>}
-      <div className="flex gap-2 shrink-0">{editing?.id === item.id ? <><Button type="button" size="icon" variant="ghost" disabled={!editing.nome.trim() || save.isPending} onClick={() => save.mutate({ id: item.id, nome: editing.nome.trim(), ativo: item.ativo })}><Save className="size-4" /></Button><Button type="button" size="icon" variant="ghost" onClick={() => setEditing(null)}><X className="size-4" /></Button></> : <Button type="button" size="sm" variant="outline" disabled={!canEdit} onClick={() => setEditing({ id: item.id, nome: item.nome })}><Pencil className="size-4 mr-2" />Editar</Button>}
-        <Button type="button" size="sm" variant="outline" disabled={!canEdit} onClick={() => save.mutate({ id: item.id, nome: item.nome, ativo: !item.ativo })}>{item.ativo ? "Desativar" : "Ativar"}</Button>
-        <Button type="button" size="sm" variant="outline" disabled={!canEdit} onClick={() => { if (confirm("Excluir este status?")) remove.mutate(item.id); }}><Trash2 className="size-4 mr-2 text-destructive" />Excluir</Button></div>
-    </div>)}</div>
-  </CardContent></Card>;
+  const add = useMutation({
+    mutationFn: () => addStatusProcesso({ data: { nome } }),
+    onSuccess: () => {
+      setNome("");
+      refresh();
+      toast.success("Status adicionado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const save = useMutation({
+    mutationFn: (item: { id: string; nome: string; ativo: boolean }) =>
+      updateStatusProcesso({ data: item }),
+    onSuccess: () => {
+      setEditing(null);
+      refresh();
+      toast.success("Status atualizado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteStatusProcesso({ data: { id } }),
+    onSuccess: () => {
+      refresh();
+      toast.success("Status excluído");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Card>
+      <CardContent className="p-5 space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Os status cadastrados aqui aparecem nos filtros e nos formulários de processos. Um status
+          usado em processo não pode ser excluído: desative-o ou troque os processos antes.
+        </p>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (nome.trim()) add.mutate();
+            else toast.error("Digite o nome do status.");
+          }}
+        >
+          <Input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Novo status"
+            disabled={!canEdit}
+          />
+          <Button type="submit" disabled={!canEdit || add.isPending}>
+            <Plus className="size-4 mr-2" />
+            Adicionar
+          </Button>
+        </form>
+        <div className="divide-y divide-border/60">
+          {list.data?.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-2 py-2">
+              {editing?.id === item.id ? (
+                <Input
+                  autoFocus
+                  value={editing.nome}
+                  onChange={(e) => setEditing({ ...editing, nome: e.target.value })}
+                />
+              ) : (
+                <span className={item.ativo ? "" : "text-muted-foreground line-through"}>
+                  {item.nome}
+                </span>
+              )}
+              <div className="flex gap-2 shrink-0">
+                {editing?.id === item.id ? (
+                  <>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      disabled={!editing.nome.trim() || save.isPending}
+                      onClick={() =>
+                        save.mutate({ id: item.id, nome: editing.nome.trim(), ativo: item.ativo })
+                      }
+                    >
+                      <Save className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setEditing(null)}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!canEdit}
+                    onClick={() => setEditing({ id: item.id, nome: item.nome })}
+                  >
+                    <Pencil className="size-4 mr-2" />
+                    Editar
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={!canEdit}
+                  onClick={() => save.mutate({ id: item.id, nome: item.nome, ativo: !item.ativo })}
+                >
+                  {item.ativo ? "Desativar" : "Ativar"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={!canEdit}
+                  onClick={() => {
+                    if (confirm("Excluir este status?")) remove.mutate(item.id);
+                  }}
+                >
+                  <Trash2 className="size-4 mr-2 text-destructive" />
+                  Excluir
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function CatalogoManager({ categoria, canEdit }: { categoria: Categoria; canEdit: boolean }) {

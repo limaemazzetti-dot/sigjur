@@ -100,7 +100,7 @@ function ClientesPage() {
       list.data.map((c) => ({
         Nome: c.nome,
         Tipo: c.tipo === "pf" ? "Pessoa Física" : "Pessoa Jurídica",
-        Cadastro: c.fornecedor ? "Cliente / Fornecedor" : "Cliente",
+        Cadastro: c.fornecedor ? "Fornecedor" : "Cliente",
         "CPF/CNPJ": c.cpf_cnpj ?? "",
         Email: c.email ?? "",
         Telefone: c.telefone ?? "",
@@ -115,8 +115,8 @@ function ClientesPage() {
     if (!list.data) return;
     exportToPdf({
       filename: "clientes",
-      titulo: "Cadastro de Clientes",
-      subtitulo: `${list.data.length} clientes`,
+      titulo: "Cadastros",
+      subtitulo: `${list.data.length} cadastros`,
       columns: [
         { header: "Nome", dataKey: "nome" },
         { header: "Tipo", dataKey: "tipo" },
@@ -128,7 +128,7 @@ function ClientesPage() {
       rows: list.data.map((c) => ({
         nome: c.nome,
         tipo: c.tipo === "pf" ? "PF" : "PJ",
-        cadastro: c.fornecedor ? "Cliente / Fornecedor" : "Cliente",
+        cadastro: c.fornecedor ? "Fornecedor" : "Cliente",
         doc: c.cpf_cnpj ?? "",
         tel: c.telefone ?? "",
         email: c.email ?? "",
@@ -221,13 +221,13 @@ function ClientesPage() {
           >
             <DialogTrigger asChild>
               <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" /> Novo cliente / fornecedor
+                <Plus className="w-4 h-4 mr-2" /> Novo cadastro
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-[calc(100vw-2rem)] lg:max-w-2xl">
               <DialogHeader>
                 <DialogTitle className="font-serif text-2xl">
-                  {editing ? "Editar cadastro" : "Novo cliente / fornecedor"}
+                  {editing ? "Editar cadastro" : "Novo cadastro"}
                 </DialogTitle>
               </DialogHeader>
               <ClienteForm
