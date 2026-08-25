@@ -385,31 +385,42 @@ function ProcessosPage() {
         <Card className="flex-1 min-h-0 border-border/60 overflow-hidden rounded-md">
           <div className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable]">
             <table className="w-full table-fixed text-sm border-collapse">
+              <colgroup>
+                <col className="w-[4%]" />
+                <col className="w-[14%]" />
+                <col className="w-[14%]" />
+                <col className="w-[9%]" />
+                <col className="w-[13%]" />
+                <col className="w-[15%]" />
+                <col className="w-[10%]" />
+                <col className="w-[11%]" />
+                <col className="w-[10%]" />
+              </colgroup>
               <thead className="sticky top-0 z-10 bg-gold-gradient text-black text-xs uppercase tracking-wide">
                 <tr>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">#</th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-1 py-3 font-semibold border border-black/20">#</th>
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Autor / Responsável
                   </th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Réu
                   </th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Status
                   </th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Nº do Processo
                   </th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Tipo de Ação
                   </th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Área
                   </th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Data de entrada
                   </th>
-                  <th className="text-center px-3 py-3 font-semibold border border-black/20">
+                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Prazo em Aberto?
                   </th>
                 </tr>
@@ -427,10 +438,10 @@ function ProcessosPage() {
                       onClick={() => setEditing(p)}
                       className="hover:bg-secondary/40 cursor-pointer"
                     >
-                      <td className="px-3 py-2 text-center border border-border/60 tabular-nums text-xs text-muted-foreground font-semibold">
+                      <td className="px-1 py-2 text-center border border-border/60 tabular-nums text-xs text-muted-foreground font-semibold">
                         {idx + 1}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60 break-words">
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                         <span className="block font-medium uppercase">{p.autor || "—"}</span>
                         {responsavel && (
                           <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -438,31 +449,31 @@ function ProcessosPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60 break-words">
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                         {p.reu || "—"}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60">
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                         <span
                           className={`inline-block px-3 py-1 rounded text-xs font-semibold border ${isAtivo ? "bg-primary/20 text-primary border-primary/40" : "bg-muted text-muted-foreground border-border"}`}
                         >
                           {statusLabels[p.status] ?? p.status}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-center font-mono text-xs whitespace-nowrap border border-border/60">
+                      <td className="px-2 py-2 text-center align-top font-mono text-xs break-all border border-border/60">
                         {p.numero_cnj ?? "—"}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60">
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                         {p.tipo_acao ?? "—"}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60">
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                         {p.area?.trim() || p.materia?.trim() || "—"}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60 whitespace-nowrap">
+                      <td className="px-2 py-2 text-center align-top border border-border/60 whitespace-normal break-words">
                         {p.data_inicio
                           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
                           : "—"}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60">
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                         <span
                           className={
                             p.prazo_em_aberto
