@@ -103,6 +103,12 @@ export type Database = {
         };
         Relationships: [];
       };
+      status_processo_opcoes: {
+        Row: { ativo: boolean; codigo: string; created_at: string; id: string; nome: string; updated_at: string };
+        Insert: { ativo?: boolean; codigo: string; created_at?: string; id?: string; nome: string; updated_at?: string };
+        Update: { ativo?: boolean; codigo?: string; created_at?: string; id?: string; nome?: string; updated_at?: string };
+        Relationships: [];
+      };
       cliente_vinculos: {
         Row: {
           cliente_principal_id: string;
@@ -549,7 +555,7 @@ export type Database = {
           prazo_em_aberto: boolean;
           resultado: string | null;
           reu: string;
-          status: Database["public"]["Enums"]["status_processo"];
+          status: string;
           sucumbencias_percentual: number | null;
           sucumbencias_valor: number | null;
           tipo: string | null;
@@ -592,7 +598,7 @@ export type Database = {
           prazo_em_aberto?: boolean;
           resultado?: string | null;
           reu: string;
-          status?: Database["public"]["Enums"]["status_processo"];
+          status?: string;
           sucumbencias_percentual?: number | null;
           sucumbencias_valor?: number | null;
           tipo?: string | null;
@@ -635,7 +641,7 @@ export type Database = {
           prazo_em_aberto?: boolean;
           resultado?: string | null;
           reu?: string;
-          status?: Database["public"]["Enums"]["status_processo"];
+          status?: string;
           sucumbencias_percentual?: number | null;
           sucumbencias_valor?: number | null;
           tipo?: string | null;

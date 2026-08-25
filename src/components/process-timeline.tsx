@@ -1,8 +1,8 @@
 import { Check, CircleDot, Gavel, Archive, PauseCircle, Handshake, ScrollText, FileText, Scale, Repeat2 } from "lucide-react";
-import { STATUS_PROCESSO, STATUS_LABEL } from "@/lib/processos.functions";
+import { STATUS_LABEL } from "@/lib/processos.functions";
 import { Card, CardContent } from "@/components/ui/card";
 
-type Status = (typeof STATUS_PROCESSO)[number];
+type Status = string;
 
 // Linear "happy path" fase-a-fase
 const PIPELINE: Status[] = [
@@ -21,7 +21,7 @@ const TERMINAL: Record<string, { label: string; icon: typeof Gavel; tone: "gold"
   suspenso: { label: "Suspenso", icon: PauseCircle, tone: "muted" },
 };
 
-const STAGE_ICON: Record<Status, typeof FileText> = {
+const STAGE_ICON: Record<string, typeof FileText> = {
   inicial: FileText,
   em_andamento: ScrollText,
   recurso: Repeat2,
@@ -36,10 +36,12 @@ const STAGE_ICON: Record<Status, typeof FileText> = {
 
 export function ProcessTimeline({
   status,
+  statusLabel,
   totalAndamentos,
   ultimoAndamento,
 }: {
   status: Status;
+  statusLabel?: string;
   totalAndamentos: number;
   ultimoAndamento?: { data: string; titulo: string } | null;
 }) {
@@ -61,7 +63,7 @@ export function ProcessTimeline({
               Linha do tempo do processo
             </p>
             <h3 className="font-serif text-2xl mt-1">
-              {terminal ? terminal.label : STATUS_LABEL[status]}
+              {terminal ? terminal.label : (statusLabel ?? STATUS_LABEL[status] ?? status)}
             </h3>
             {ultimoAndamento ? (
               <p className="text-xs text-muted-foreground mt-1">
@@ -171,7 +173,7 @@ export function ProcessTimeline({
                         pending ? "text-muted-foreground/70" : "text-foreground",
                       ].join(" ")}
                     >
-                      {STATUS_LABEL[s]}
+                      {STATUS_LABEL[s] ?? s}
                     </p>
                   </div>
                 </li>

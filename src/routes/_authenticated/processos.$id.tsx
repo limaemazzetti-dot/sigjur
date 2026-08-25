@@ -8,7 +8,6 @@ import {
   listAndamentos,
   addAndamento,
   deleteAndamento,
-  STATUS_PROCESSO,
   STATUS_LABEL,
   type ProcessoFormInput,
 } from "@/lib/processos.functions";
@@ -30,6 +29,7 @@ import { toast } from "sonner";
 import { formatBRL } from "@/lib/export";
 import { ProcessTimeline } from "@/components/process-timeline";
 import { useAutoSync } from "@/lib/use-auto-sync";
+import { listStatusProcesso } from "@/lib/status-processo.functions";
 
 export const Route = createFileRoute("/_authenticated/processos/$id")({
   component: ProcessoDetalhe,
@@ -53,6 +53,15 @@ function ProcessoDetalhe() {
     queryKey: ["lancamentos", "processo", id],
     queryFn: () => listLancamentos({ data: { processo_id: id } }),
   });
+  const statusOpcoes = useQuery({
+    queryKey: ["status-processo"],
+    queryFn: () => listStatusProcesso({ data: {} }),
+    staleTime: 60_000,
+  });
+  const statusLabels = {
+    ...STATUS_LABEL,
+    ...Object.fromEntries((statusOpcoes.data ?? []).map((item) => [item.codigo, item.nome])),
+  };
 
   const mSave = useMutation({
     mutationFn: (d: ProcessoFormInput) => upsertProcesso({ data: d }),
@@ -141,7 +150,7 @@ function ProcessoDetalhe() {
         </h1>
         <p className="text-sm mt-1">
           <span className="inline-block px-2 py-0.5 rounded bg-secondary">
-            {STATUS_LABEL[p.status]}
+            {statusLabels[p.status] ?? p.status}
           </span>
           {p.materia && <span className="ml-2 text-muted-foreground">· {p.materia}</span>}
           {p.valor_causa != null && (
@@ -152,6 +161,7 @@ function ProcessoDetalhe() {
 
       <ProcessTimeline
         status={p.status}
+        statusLabel={statusLabels[p.status] ?? p.status}
         totalAndamentos={andam.data?.length ?? 0}
         ultimoAndamento={
           andam.data && andam.data.length > 0
@@ -378,7 +388,7 @@ function ProcessoEdit({
     numero_cnj: string | null;
     autor: string;
     reu: string;
-    status: (typeof STATUS_PROCESSO)[number];
+    status: string;
     materia: string | null;
     vara: string | null;
     tribunal: string | null;
@@ -404,6 +414,11 @@ function ProcessoEdit({
     valor_causa: initial.valor_causa,
     origem: initial.origem ?? "",
     observacoes: initial.observacoes ?? "",
+  });
+  const statusOpcoes = useQuery({
+    queryKey: ["status-processo"],
+    queryFn: () => listStatusProcesso({ data: {} }),
+    staleTime: 60_000,
   });
   function set<K extends keyof ProcessoFormInput>(k: K, v: ProcessoFormInput[K]) {
     setF((s) => ({ ...s, [k]: v }));
@@ -439,9 +454,9 @@ function ProcessoEdit({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {STATUS_PROCESSO.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {STATUS_LABEL[s]}
+              {(statusOpcoes.data ?? []).map((s) => (
+                <SelectItem key={s.codigo} value={s.codigo}>
+                  {s.nome}
                 </SelectItem>
               ))}
             </SelectContent>

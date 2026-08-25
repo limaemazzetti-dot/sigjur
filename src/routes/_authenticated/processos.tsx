@@ -8,7 +8,6 @@ import {
   listAndamentos,
   upsertProcesso,
   deleteProcesso,
-  STATUS_PROCESSO,
   STATUS_LABEL,
   type ProcessoFormInput,
   type ProcessoResumoRow,
@@ -61,6 +60,7 @@ import { useAutoSync } from "@/lib/use-auto-sync";
 import { ImportPlanilhaDialog } from "@/components/import-planilha-dialog";
 import { CatalogoCombobox } from "@/components/catalogo-combobox";
 import { SearchableClientPicker } from "@/components/searchable-client-picker";
+import { listStatusProcesso } from "@/lib/status-processo.functions";
 
 export const Route = createFileRoute("/_authenticated/processos")({
   component: ProcessosRoute,
@@ -92,8 +92,7 @@ function ProcessosPage() {
       listProcessosResumo({
         data: {
           q: buscaDeferred || undefined,
-          status:
-            statusFilter !== "all" ? (statusFilter as (typeof STATUS_PROCESSO)[number]) : undefined,
+          status: statusFilter !== "all" ? statusFilter : undefined,
           tipo_acao: tipoAcaoFilter !== "all" ? tipoAcaoFilter : undefined,
           prazo_em_aberto:
             prazoFilter === "aberto" ? true : prazoFilter === "sem_prazo" ? false : undefined,
@@ -114,6 +113,15 @@ function ProcessosPage() {
     queryFn: () => listProcessoFilterOptions(),
     staleTime: 60_000,
   });
+  const statusOpcoes = useQuery({
+    queryKey: ["status-processo"],
+    queryFn: () => listStatusProcesso({ data: {} }),
+    staleTime: 60_000,
+  });
+  const statusLabels = {
+    ...STATUS_LABEL,
+    ...Object.fromEntries((statusOpcoes.data ?? []).map((item) => [item.codigo, item.nome])),
+  };
 
   const mSave = useMutation({
     mutationFn: (d: ProcessoFormInput) => upsertProcesso({ data: d }),
@@ -147,7 +155,7 @@ function ProcessosPage() {
         "Nº CNJ": p.numero_cnj ?? "",
         Autor: p.autor,
         Réu: p.reu,
-        Status: STATUS_LABEL[p.status],
+        Status: statusLabels[p.status] ?? p.status,
         Matéria: p.materia ?? "",
         Área: p.area ?? p.materia ?? "",
         Responsável: p.clientes?.nome ?? "",
@@ -165,7 +173,7 @@ function ProcessosPage() {
       subtitulo:
         `${list.data.length} processos` +
         (statusFilter !== "all"
-          ? ` — ${STATUS_LABEL[statusFilter as keyof typeof STATUS_LABEL]}`
+          ? ` — ${statusLabels[statusFilter] ?? statusFilter}`
           : ""),
       columns: [
         { header: "Nº CNJ", dataKey: "cnj" },
@@ -183,7 +191,7 @@ function ProcessosPage() {
             ? `${p.autor} / Responsável: ${p.clientes.nome}`
             : p.autor,
         reu: p.reu,
-        status: STATUS_LABEL[p.status],
+        status: statusLabels[p.status] ?? p.status,
         materia: p.materia ?? "—",
         area: p.area ?? p.materia ?? "—",
         entrada: p.data_inicio
@@ -319,9 +327,9 @@ function ProcessosPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
-              {STATUS_PROCESSO.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {STATUS_LABEL[s]}
+              {(statusOpcoes.data ?? []).map((s) => (
+                <SelectItem key={s.codigo} value={s.codigo}>
+                  {s.nome}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -440,7 +448,7 @@ function ProcessosPage() {
                         <span
                           className={`inline-block px-3 py-1 rounded text-xs font-semibold border ${isAtivo ? "bg-primary/20 text-primary border-primary/40" : "bg-muted text-muted-foreground border-border"}`}
                         >
-                          {STATUS_LABEL[p.status]}
+                          {statusLabels[p.status] ?? p.status}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-center font-mono text-xs whitespace-nowrap border border-border/60">
@@ -500,7 +508,11 @@ function ProcessosPage() {
               </SheetHeader>
 
               <div className="p-6 space-y-6">
-                <EditingTimeline processoId={editing.id} status={editing.status} />
+                <EditingTimeline
+                  processoId={editing.id}
+                  status={editing.status}
+                  statusLabel={statusLabels[editing.status] ?? editing.status}
+                />
                 <ProcessoForm
                   key={editing.id}
                   clientes={(clientes.data ?? []).filter((cliente) => !cliente.fornecedor)}
@@ -547,9 +559,11 @@ function ProcessosPage() {
 function EditingTimeline({
   processoId,
   status,
+  statusLabel,
 }: {
   processoId: string;
-  status: (typeof STATUS_PROCESSO)[number];
+  status: string;
+  statusLabel: string;
 }) {
   const andam = useQuery({
     queryKey: ["andamentos", processoId],
@@ -558,6 +572,7 @@ function EditingTimeline({
   return (
     <ProcessTimeline
       status={status}
+      statusLabel={statusLabel}
       totalAndamentos={andam.data?.length ?? 0}
       ultimoAndamento={
         andam.data && andam.data.length > 0
@@ -641,6 +656,11 @@ function ProcessoForm({
   const catAdvogados = useQuery({
     queryKey: ["catalogo", "advogado"],
     queryFn: () => listCatalogo({ data: { categoria: "advogado" } }),
+    staleTime: 60_000,
+  });
+  const statusOpcoes = useQuery({
+    queryKey: ["status-processo"],
+    queryFn: () => listStatusProcesso({ data: {} }),
     staleTime: 60_000,
   });
   const referenceOptions = useQuery({
@@ -732,9 +752,9 @@ function ProcessoForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUS_PROCESSO.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {STATUS_LABEL[s]}
+                  {(statusOpcoes.data ?? []).map((s) => (
+                    <SelectItem key={s.codigo} value={s.codigo}>
+                      {s.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>

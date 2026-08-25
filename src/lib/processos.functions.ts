@@ -16,7 +16,7 @@ export const STATUS_PROCESSO = [
   "acordo",
 ] as const;
 
-export const STATUS_LABEL: Record<(typeof STATUS_PROCESSO)[number], string> = {
+export const STATUS_LABEL: Record<string, string> = {
   inicial: "Inicial",
   em_andamento: "Em andamento",
   execucao: "Execução",
@@ -35,7 +35,7 @@ const ProcessoInput = z.object({
   pasta: z.string().nullable().optional(),
   autor: z.string().min(1),
   reu: z.string().min(1),
-  status: z.enum(STATUS_PROCESSO).default("inicial"),
+  status: z.string().trim().min(1).max(80).default("inicial"),
   materia: z.string().nullable().optional(),
   tipo_acao: z.string().nullable().optional(),
   instancia: z.string().nullable().optional(),
@@ -78,7 +78,7 @@ export type ProcessoRow = {
   pasta: string | null;
   autor: string;
   reu: string;
-  status: (typeof STATUS_PROCESSO)[number];
+  status: string;
   materia: string | null;
   tipo_acao: string | null;
   instancia: string | null;
@@ -183,7 +183,7 @@ export const listProcessos = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        status: z.enum(STATUS_PROCESSO).optional(),
+        status: z.string().trim().min(1).max(80).optional(),
         materia: z.string().optional(),
         cliente_id: z.string().uuid().optional(),
         q: z.string().optional(),
@@ -266,7 +266,7 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        status: z.enum(STATUS_PROCESSO).optional(),
+        status: z.string().trim().min(1).max(80).optional(),
         q: z.string().optional(),
         tipo_acao: z.string().optional(),
         prazo_em_aberto: z.boolean().optional(),
