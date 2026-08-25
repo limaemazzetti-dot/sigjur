@@ -200,7 +200,7 @@ function ProcessosPage() {
   }
 
   return (
-    <div className="h-full min-h-0 p-4 pb-0 sm:p-6 sm:pb-0 lg:p-10 lg:pb-0 flex flex-col gap-6 max-w-7xl mx-auto w-full overflow-hidden">
+    <div className="h-full min-h-0 p-4 pb-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0 flex flex-col gap-6 max-w-[1600px] mx-auto w-full min-w-0 overflow-x-hidden">
       <header className="shrink-0 grid grid-cols-[minmax(0,1fr)] items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Jurídico</p>
@@ -383,8 +383,8 @@ function ProcessosPage() {
         </p>
       ) : list.data && list.data.length > 0 ? (
         <Card className="flex-1 min-h-0 border-border/60 overflow-hidden rounded-md">
-          <div className="h-full overflow-auto overscroll-contain [scrollbar-gutter:stable]">
-            <table className="w-full text-sm border-collapse">
+          <div className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable]">
+            <table className="w-full table-fixed text-sm border-collapse">
               <thead className="sticky top-0 z-10 bg-gold-gradient text-black text-xs uppercase tracking-wide">
                 <tr>
                   <th className="text-center px-3 py-3 font-semibold border border-black/20">#</th>
@@ -430,7 +430,7 @@ function ProcessosPage() {
                       <td className="px-3 py-2 text-center border border-border/60 tabular-nums text-xs text-muted-foreground font-semibold">
                         {idx + 1}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60 min-w-40">
+                      <td className="px-3 py-2 text-center border border-border/60 break-words">
                         <span className="block font-medium uppercase">{p.autor || "—"}</span>
                         {responsavel && (
                           <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -438,7 +438,7 @@ function ProcessosPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-center border border-border/60 min-w-40">
+                      <td className="px-3 py-2 text-center border border-border/60 break-words">
                         {p.reu || "—"}
                       </td>
                       <td className="px-3 py-2 text-center border border-border/60">

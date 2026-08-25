@@ -146,7 +146,7 @@ function DrePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 space-y-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto w-full">
       <header className="grid grid-cols-[minmax(0,1fr)] items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Financeiro</p>

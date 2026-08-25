@@ -91,7 +91,7 @@ function BiPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto w-full">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">

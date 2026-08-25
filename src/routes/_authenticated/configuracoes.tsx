@@ -54,7 +54,7 @@ export function CadastrosPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 space-y-6 max-w-5xl mx-auto w-full">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto w-full">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Jurídico</p>
