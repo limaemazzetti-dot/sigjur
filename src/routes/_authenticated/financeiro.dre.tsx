@@ -213,6 +213,41 @@ function DrePage() {
         </CardContent>
       </Card>
 
+      {dre.data && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card className="border-emerald-500/30 bg-emerald-500/5">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Entradas
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+                {formatBRL(dre.data.totalEntradas)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-rose-500/30 bg-rose-500/5">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Saídas
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-rose-700 dark:text-rose-400">
+                {formatBRL(dre.data.totalSaidas)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-border/60">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Saldo do período
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">
+                {formatBRL(dre.data.totalEntradas - dre.data.totalSaidas)}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Card className="border-border/60">
         <CardHeader>
           <CardTitle className="font-sans font-bold uppercase tracking-wide text-xl">

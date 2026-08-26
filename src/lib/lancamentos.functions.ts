@@ -573,6 +573,12 @@ export const getDre = createServerFn({ method: "POST" })
     const receitaLiquida = receitaBruta - totalDeducoes;
     const totalDespesas = despesas.reduce((s, c) => s + c.total, 0);
     const resultado = receitaLiquida - totalDespesas;
+    const totalEntradas = (rows ?? [])
+      .filter((row) => row.tipo === "entrada")
+      .reduce((total, row) => total + Number(row.valor), 0);
+    const totalSaidas = (rows ?? [])
+      .filter((row) => row.tipo === "saida")
+      .reduce((total, row) => total + Number(row.valor), 0);
     return {
       receita,
       deducoes,
@@ -582,5 +588,7 @@ export const getDre = createServerFn({ method: "POST" })
       receitaLiquida,
       totalDespesas,
       resultado,
+      totalEntradas,
+      totalSaidas,
     };
   });

@@ -12,6 +12,8 @@ const FORNECEDOR_MARKER = "[[SIGJUR:FORNECEDOR]]";
 const CLIENTE_SAFE_COLUMNS =
   "id, tipo, fornecedor, nome, cpf_cnpj, rg, email, telefone, profissao, nacionalidade, data_aniversario, sexo, estado_civil, como_conheceu, endereco, bairro, cidade, estado, cep, observacoes, representante_nome, representante_nacionalidade, representante_profissao, representante_data_nascimento, representante_rg, representante_cpf, representante_parentesco, template_ids, created_at, updated_at";
 
+const CLIENTE_LEGACY_SAFE_COLUMNS = CLIENTE_SAFE_COLUMNS.replace("fornecedor, ", "");
+
 function decodeClienteRow(row: Record<string, unknown>): ClienteRow {
   const rawObservacoes = typeof row.observacoes === "string" ? row.observacoes : "";
   return {
@@ -79,7 +81,20 @@ export const listClientes = createServerFn({ method: "POST" })
       .select(CLIENTE_SAFE_COLUMNS)
       .order("nome");
     if (data.q) q = q.ilike("nome", `%${data.q}%`);
-    const { data: rows, error } = await q;
+    let { data: rows, error } = await q;
+    // Bancos antigos ainda podem não ter a flag de fornecedor. Nesse caso,
+    // preservamos o carregamento dos clientes e reconhecemos o fornecedor
+    // pelo marcador legado em observações.
+    if (error && missingFornecedorColumn(error.message)) {
+      let legacyQuery = context.supabase
+        .from("clientes" as never)
+        .select(CLIENTE_LEGACY_SAFE_COLUMNS)
+        .order("nome");
+      if (data.q) legacyQuery = legacyQuery.ilike("nome", `%${data.q}%`);
+      const legacy = await legacyQuery;
+      rows = legacy.data;
+      error = legacy.error;
+    }
     if (error) throw new Error(error.message);
     return ((rows ?? []) as Array<Record<string, unknown>>).map(decodeClienteRow);
   });

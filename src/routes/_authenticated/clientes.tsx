@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -251,193 +251,203 @@ function ClientesPage() {
 
       <Card className="flex-1 min-h-0 border-border/60 overflow-hidden rounded-md">
         <CardContent className="h-full p-0 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-          {/* Desktop/tablet: tabela */}
-          <div className="hidden md:block overflow-x-auto">
-            <Table className="min-w-[760px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                  <TableHead>CPF/CNPJ</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Aniversário</TableHead>
-                  <TableHead className="w-24 text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          {list.isError ? (
+            <div className="flex min-h-48 flex-col items-center justify-center gap-3 px-4 text-center">
+              <p className="text-sm font-medium">Não foi possível carregar os clientes.</p>
+              <p className="max-w-lg text-sm text-muted-foreground">
+                {list.error instanceof Error ? list.error.message : "Tente novamente em instantes."}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => list.refetch()}>
+                Tentar novamente
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Desktop/tablet: tabela */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table className="min-w-[760px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Cadastro</TableHead>
+                      <TableHead>CPF/CNPJ</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Aniversário</TableHead>
+                      <TableHead className="w-24 text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {list.isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          Carregando…
+                        </TableCell>
+                      </TableRow>
+                    ) : list.data && list.data.length > 0 ? (
+                      list.data.map((c) => {
+                        const isToday = c.data_aniversario && isBirthdayToday(c.data_aniversario);
+                        return (
+                          <TableRow key={c.id}>
+                            <TableCell className="font-medium">{c.nome}</TableCell>
+                            <TableCell className="text-sm">
+                              {c.tipo === "pf" ? "Pessoa Física" : "Pessoa Jurídica"}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant={c.fornecedor ? "default" : "secondary"}>
+                                {c.fornecedor ? "Fornecedor" : "Cliente"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">{c.cpf_cnpj ?? "—"}</TableCell>
+                            <TableCell className="text-sm">{c.telefone ?? "—"}</TableCell>
+                            <TableCell className="text-sm">
+                              {c.data_aniversario ? (
+                                <span
+                                  className={
+                                    "inline-flex items-center gap-1 " +
+                                    (isToday ? "text-accent font-semibold" : "")
+                                  }
+                                >
+                                  {isToday && <Cake className="w-3.5 h-3.5" />}
+                                  {new Date(c.data_aniversario + "T00:00:00").toLocaleDateString(
+                                    "pt-BR",
+                                  )}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Documentos"
+                                onClick={() => setDocsFor(c)}
+                              >
+                                <FileSignature className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditing(c);
+                                  setOpen(true);
+                                }}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  if (confirm(`Remover ${c.nome}?`)) mDel.mutate(c.id);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                          Nenhum cliente cadastrado ainda. Use “Novo cadastro” para adicionar o
+                          primeiro cliente.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile: cards verticais */}
+              <div className="md:hidden divide-y divide-border/60">
                 {list.isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      Carregando…
-                    </TableCell>
-                  </TableRow>
+                  <div className="text-center py-8 text-muted-foreground text-sm">Carregando…</div>
                 ) : list.data && list.data.length > 0 ? (
                   list.data.map((c) => {
                     const isToday = c.data_aniversario && isBirthdayToday(c.data_aniversario);
                     return (
-                      <TableRow key={c.id}>
-                        <TableCell className="font-medium">{c.nome}</TableCell>
-                        <TableCell className="text-sm">
-                          {c.tipo === "pf" ? "Pessoa Física" : "Pessoa Jurídica"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <Badge variant={c.fornecedor ? "default" : "secondary"}>
-                            {c.fornecedor ? "Fornecedor" : "Cliente"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">{c.cpf_cnpj ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{c.telefone ?? "—"}</TableCell>
-                        <TableCell className="text-sm">
-                          {c.data_aniversario ? (
-                            <span
-                              className={
-                                "inline-flex items-center gap-1 " +
-                                (isToday ? "text-accent font-semibold" : "")
-                              }
+                      <div key={c.id} className="p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{c.nome}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {c.tipo === "pf" ? "Pessoa Física" : "Pessoa Jurídica"}
+                            </p>
+                            {c.fornecedor && (
+                              <Badge variant="default" className="mt-1">
+                                Fornecedor
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex shrink-0 gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Documentos"
+                              onClick={() => setDocsFor(c)}
                             >
-                              {isToday && <Cake className="w-3.5 h-3.5" />}
-                              {new Date(c.data_aniversario + "T00:00:00").toLocaleDateString(
-                                "pt-BR",
-                              )}
-                            </span>
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Documentos"
-                            onClick={() => setDocsFor(c)}
-                          >
-                            <FileSignature className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditing(c);
-                              setOpen(true);
-                            }}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              if (confirm(`Remover ${c.nome}?`)) mDel.mutate(c.id);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                              <FileSignature className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditing(c);
+                                setOpen(true);
+                              }}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                if (confirm(`Remover ${c.nome}?`)) mDel.mutate(c.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                          <dt className="text-muted-foreground">CPF/CNPJ</dt>
+                          <dd className="text-right break-all">{c.cpf_cnpj ?? "—"}</dd>
+                          <dt className="text-muted-foreground">Telefone</dt>
+                          <dd className="text-right break-all">{c.telefone ?? "—"}</dd>
+                          <dt className="text-muted-foreground">Aniversário</dt>
+                          <dd className="text-right">
+                            {c.data_aniversario ? (
+                              <span
+                                className={
+                                  "inline-flex items-center gap-1 " +
+                                  (isToday ? "text-accent font-semibold" : "")
+                                }
+                              >
+                                {isToday && <Cake className="w-3.5 h-3.5" />}
+                                {new Date(c.data_aniversario + "T00:00:00").toLocaleDateString(
+                                  "pt-BR",
+                                )}
+                              </span>
+                            ) : (
+                              "—"
+                            )}
+                          </dd>
+                        </dl>
+                      </div>
                     );
                   })
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                      Nenhum cliente cadastrado ainda.{" "}
-                      <Link to="/processos" className="text-accent underline">
-                        Ir para Audiências
-                      </Link>
-                      .
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Mobile: cards verticais */}
-          <div className="md:hidden divide-y divide-border/60">
-            {list.isLoading ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">Carregando…</div>
-            ) : list.data && list.data.length > 0 ? (
-              list.data.map((c) => {
-                const isToday = c.data_aniversario && isBirthdayToday(c.data_aniversario);
-                return (
-                  <div key={c.id} className="p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate">{c.nome}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {c.tipo === "pf" ? "Pessoa Física" : "Pessoa Jurídica"}
-                        </p>
-                        {c.fornecedor && (
-                          <Badge variant="default" className="mt-1">
-                            Fornecedor
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Documentos"
-                          onClick={() => setDocsFor(c)}
-                        >
-                          <FileSignature className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditing(c);
-                            setOpen(true);
-                          }}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            if (confirm(`Remover ${c.nome}?`)) mDel.mutate(c.id);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                      <dt className="text-muted-foreground">CPF/CNPJ</dt>
-                      <dd className="text-right break-all">{c.cpf_cnpj ?? "—"}</dd>
-                      <dt className="text-muted-foreground">Telefone</dt>
-                      <dd className="text-right break-all">{c.telefone ?? "—"}</dd>
-                      <dt className="text-muted-foreground">Aniversário</dt>
-                      <dd className="text-right">
-                        {c.data_aniversario ? (
-                          <span
-                            className={
-                              "inline-flex items-center gap-1 " +
-                              (isToday ? "text-accent font-semibold" : "")
-                            }
-                          >
-                            {isToday && <Cake className="w-3.5 h-3.5" />}
-                            {new Date(c.data_aniversario + "T00:00:00").toLocaleDateString("pt-BR")}
-                          </span>
-                        ) : (
-                          "—"
-                        )}
-                      </dd>
-                    </dl>
+                  <div className="text-center py-10 text-muted-foreground text-sm px-4">
+                    Nenhum cliente cadastrado ainda. Use “Novo cadastro” para adicionar o primeiro
+                    cliente.
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-10 text-muted-foreground text-sm px-4">
-                Nenhum cliente cadastrado ainda.{" "}
-                <Link to="/processos" className="text-accent underline">
-                  Ir para Audiências
-                </Link>
-                .
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
