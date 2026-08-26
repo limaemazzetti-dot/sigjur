@@ -26,13 +26,16 @@ export const agendaProxima = createServerFn({ method: "GET" })
     // Prazos em aberto (inclui vencidos + próximos 12 meses)
     const { data: prazos } = await context.supabase
       .from("prazos" as never)
-      .select("id, titulo, descricao, data_prazo, prioridade, processo_id, processos(autor, reu)")
+      .select(
+        "id, titulo, descricao, tipo_evento, data_prazo, prioridade, processo_id, processos(autor, reu)",
+      )
       .eq("status", "aberto")
       .lte("data_prazo", iso(inFar));
     for (const p of (prazos ?? []) as unknown as Array<{
       id: string;
       titulo: string;
       descricao: string | null;
+      tipo_evento: "prazo" | "audiencia" | "pericia" | null;
       data_prazo: string;
       prioridade: "baixa" | "media" | "alta";
       processo_id: string | null;
@@ -40,8 +43,8 @@ export const agendaProxima = createServerFn({ method: "GET" })
     }>) {
       const d = new Date(p.data_prazo + "T00:00:00");
       const dias = Math.round((d.getTime() - today.getTime()) / 86400000);
-      const isAudiencia = /audi[êe]ncia/i.test(p.titulo) || /audi[êe]ncia/i.test(p.descricao ?? "");
-      const isPericia = /per[íi]cia/i.test(p.titulo) || /per[íi]cia/i.test(p.descricao ?? "");
+      const isAudiencia = p.tipo_evento === "audiencia";
+      const isPericia = p.tipo_evento === "pericia";
       items.push({
         id: p.id,
         tipo: isPericia ? "pericia" : isAudiencia ? "audiencia" : "prazo",

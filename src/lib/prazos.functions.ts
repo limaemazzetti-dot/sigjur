@@ -12,6 +12,7 @@ const PrazoInput = z.object({
   status: z.enum(["aberto", "cumprido", "cancelado"]).default("aberto"),
   prioridade: z.enum(["baixa", "media", "alta"]).default("media"),
   data_conclusao: z.string().nullable().optional(),
+  tipo_evento: z.enum(["prazo", "audiencia", "pericia"]).default("prazo"),
 });
 
 export type PrazoFormInput = z.infer<typeof PrazoInput>;
@@ -25,6 +26,7 @@ export type PrazoRow = {
   status: "aberto" | "cumprido" | "cancelado";
   prioridade: "baixa" | "media" | "alta";
   data_conclusao: string | null;
+  tipo_evento: "prazo" | "audiencia" | "pericia";
   created_at: string;
   updated_at: string;
   processos?: {
@@ -43,6 +45,7 @@ export const listPrazos = createServerFn({ method: "POST" })
       .object({
         status: z.enum(["aberto", "cumprido", "cancelado"]).nullable().optional(),
         q: z.string().nullable().optional(),
+        tipo_evento: z.enum(["prazo", "audiencia", "pericia"]).optional(),
       })
       .parse(d ?? {}),
   )
@@ -54,6 +57,7 @@ export const listPrazos = createServerFn({ method: "POST" })
       )
       .order("data_prazo", { ascending: true });
     if (data.status) q = q.eq("status", data.status);
+    if (data.tipo_evento) q = q.eq("tipo_evento", data.tipo_evento);
     if (data.q) q = q.ilike("titulo", `%${data.q}%`);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);

@@ -231,6 +231,7 @@ function ClientesPage() {
                 </DialogTitle>
               </DialogHeader>
               <ClienteForm
+                key={editing?.id ?? "novo"}
                 initial={editing}
                 onSubmit={(d) => mSave.mutate(d)}
                 loading={mSave.isPending}
@@ -507,6 +508,7 @@ function ClienteForm({
   return (
     <form
       className="space-y-4"
+      autoComplete="off"
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit(form);
@@ -598,6 +600,8 @@ function ClienteForm({
           <Label>E-mail</Label>
           <Input
             type="email"
+            name="cliente-email-contato"
+            autoComplete="new-password"
             value={form.email ?? ""}
             onChange={(e) => set("email", e.target.value)}
           />
@@ -665,7 +669,8 @@ function ClienteForm({
           <Input
             className="min-w-0"
             type={mostrarSenha ? "text" : "password"}
-            autoComplete="off"
+            name="cliente-senha-gov-br"
+            autoComplete="new-password"
             value={form.senha_gov_br ?? ""}
             onChange={(e) => set("senha_gov_br", e.target.value)}
             placeholder="Senha do gov.br do periciando"
@@ -675,8 +680,17 @@ function ClienteForm({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Uso interno. Visível apenas para usuários autenticados.
+          Uso interno. É criptografada antes de ser salva e nunca é reenviada na listagem.
         </p>
+        {initial?.id && (
+          <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox
+              checked={form.remover_senha_gov_br === true}
+              onCheckedChange={(checked) => set("remover_senha_gov_br", checked === true)}
+            />
+            Remover a senha armazenada
+          </label>
+        )}
       </div>
       <div className="border-t border-border/60 pt-4 space-y-3">
         <div>

@@ -37,13 +37,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Check, RotateCcw, AlarmClock, FileText } from "lucide-react";
@@ -80,7 +73,6 @@ function PrazosPage() {
   );
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<PrazoRow | null>(null);
-  const [pericia, setPericia] = useState<PrazoRow | null>(null);
 
   const list = useQuery({
     queryKey: ["prazos", statusFilter],
@@ -175,9 +167,8 @@ function PrazosPage() {
         { header: "Status", dataKey: "status" },
       ],
       rows: rows.map((p) => {
-        const isPericia = /per[íi]cia/i.test(p.titulo) || /per[íi]cia/i.test(p.descricao ?? "");
-        const isAudiencia =
-          /audi[êe]ncia/i.test(p.titulo) || /audi[êe]ncia/i.test(p.descricao ?? "");
+        const isPericia = p.tipo_evento === "pericia";
+        const isAudiencia = p.tipo_evento === "audiencia";
         return {
           data: formatDateBR(p.data_prazo),
           detalhes: p.descricao ? `${p.titulo}\n${p.descricao}` : p.titulo,
@@ -291,8 +282,7 @@ function PrazosPage() {
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Título</TableHead>
-                    <TableHead>Audiência</TableHead>
-                    <TableHead>Perícia</TableHead>
+                    <TableHead>Processo</TableHead>
 
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -382,24 +372,6 @@ function PrazosPage() {
                             </div>
                           ) : (
                             "—"
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {/per[íi]cia/i.test(p.titulo) || /per[íi]cia/i.test(p.descricao ?? "") ? (
-                            <button
-                              type="button"
-                              onClick={() => setPericia(p)}
-                              className="focus:outline-none"
-                            >
-                              <Badge
-                                variant="secondary"
-                                className="cursor-pointer hover:bg-secondary/80"
-                              >
-                                Perícia
-                              </Badge>
-                            </button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </TableCell>
                         <TableCell className="text-xs">{STATUS_LABEL[p.status]}</TableCell>
@@ -547,88 +519,6 @@ function PrazosPage() {
           )}
         </CardContent>
       </Card>
-
-      <Sheet open={!!pericia} onOpenChange={(v) => !v && setPericia(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="font-serif text-xl">{pericia?.titulo}</SheetTitle>
-            <SheetDescription>Detalhes da perícia</SheetDescription>
-          </SheetHeader>
-          {pericia && (
-            <div className="mt-4 space-y-4 text-sm">
-              <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">Data</p>
-                <p>{formatDateBR(pericia.data_prazo)}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">Status</p>
-                <p>{STATUS_LABEL[pericia.status]}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Prioridade
-                </p>
-                <Badge
-                  variant={
-                    pericia.prioridade === "alta"
-                      ? "destructive"
-                      : pericia.prioridade === "media"
-                        ? "default"
-                        : "secondary"
-                  }
-                >
-                  {PRIO_LABEL[pericia.prioridade]}
-                </Badge>
-              </div>
-              {pericia.processos && (
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Processo
-                  </p>
-                  <p>
-                    {pericia.processos.autor} × {pericia.processos.reu}
-                  </p>
-                  {pericia.processos.numero_cnj && (
-                    <p className="text-xs text-muted-foreground">{pericia.processos.numero_cnj}</p>
-                  )}
-                </div>
-              )}
-              {pericia.descricao && (
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Descrição
-                  </p>
-                  <p className="whitespace-pre-wrap">{pericia.descricao}</p>
-                </div>
-              )}
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setEditing(pericia);
-                    setPericia(null);
-                    setOpen(true);
-                  }}
-                >
-                  <Pencil className="h-4 w-4 mr-1" /> Editar
-                </Button>
-                {pericia.status === "aberto" && (
-                  <Button
-                    className="flex-1"
-                    onClick={() => {
-                      mStatus.mutate({ id: pericia.id, status: "cumprido" });
-                      setPericia(null);
-                    }}
-                  >
-                    <Check className="h-4 w-4 mr-1" /> Concluir
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
@@ -653,6 +543,7 @@ function PrazoForm({
     status: initial?.status ?? "aberto",
     prioridade: initial?.prioridade ?? "media",
     data_conclusao: initial?.data_conclusao ?? null,
+    tipo_evento: initial?.tipo_evento ?? "prazo",
   });
   function set<K extends keyof PrazoFormInput>(k: K, v: PrazoFormInput[K]) {
     setForm((f) => ({ ...f, [k]: v }));

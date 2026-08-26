@@ -82,13 +82,15 @@ function AudienciasPage() {
   const list = useQuery({
     queryKey: ["prazos", statusFilter],
     queryFn: () =>
-      listPrazos({ data: { status: statusFilter === "todos" ? undefined : statusFilter } }),
+      listPrazos({
+        data: {
+          status: statusFilter === "todos" ? undefined : statusFilter,
+          tipo_evento: "audiencia",
+        },
+      }),
   });
 
-  const audiencias = useMemo(() => {
-    const re = /audi[êe]ncia/i;
-    return (list.data ?? []).filter((p) => re.test(p.titulo) || re.test(p.descricao ?? ""));
-  }, [list.data]);
+  const audiencias = useMemo(() => list.data ?? [], [list.data]);
 
   return (
     <div className="h-full min-h-0 p-4 pb-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0 flex flex-col gap-6 max-w-[1600px] mx-auto w-full overflow-hidden">
@@ -302,6 +304,7 @@ function AudienciaDialog({
           data_prazo: data,
           prioridade: audiencia?.prioridade ?? "media",
           status,
+          tipo_evento: "audiencia",
         },
       }),
     onSuccess: () => {

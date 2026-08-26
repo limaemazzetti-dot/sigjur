@@ -65,7 +65,7 @@ const groups: { label: string; items: Item[] }[] = [
     items: [
       { title: "Processos", url: "/processos", icon: Briefcase },
       { title: "Audiências", url: "/audiencias", icon: Gavel },
-      { title: "Prazos", url: "/prazos", icon: AlarmClock },
+      { title: "Agenda", url: "/prazos", icon: AlarmClock },
       { title: "Perícias", url: "/pericias", icon: CalendarClock },
       { title: "Clientes", url: "/clientes", icon: Users },
       { title: "Modelos", url: "/modelos", icon: FileBarChart },

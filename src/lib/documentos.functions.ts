@@ -177,7 +177,9 @@ export const gerarDocumentosCliente = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: cliente, error: cErr } = await context.supabase
       .from("clientes" as never)
-      .select("*")
+      .select(
+        "id, tipo, nome, cpf_cnpj, rg, email, telefone, profissao, nacionalidade, endereco, cidade, estado, cep, data_aniversario, representante_nome, representante_nacionalidade, representante_profissao, representante_data_nascimento, representante_rg, representante_cpf, representante_parentesco",
+      )
       .eq("id", data.cliente_id)
       .maybeSingle();
     if (cErr) throw new Error(cErr.message);

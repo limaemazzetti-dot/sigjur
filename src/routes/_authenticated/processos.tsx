@@ -80,6 +80,13 @@ function ProcessosPage() {
   const buscaDeferred = useDeferredValue(busca);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tipoAcaoFilter, setTipoAcaoFilter] = useState("all");
+  const [autorFilter, setAutorFilter] = useState("");
+  const [reuFilter, setReuFilter] = useState("");
+  const [numeroFilter, setNumeroFilter] = useState("");
+  const [areaFilter, setAreaFilter] = useState("");
+  const [indicacaoFilter, setIndicacaoFilter] = useState("all");
+  const [entradaDeFilter, setEntradaDeFilter] = useState("");
+  const [entradaAteFilter, setEntradaAteFilter] = useState("");
   const [prazoFilter, setPrazoFilter] = useState("all");
   const [order, setOrder] = useState<
     "entrada_desc" | "entrada_asc" | "cadastro_desc" | "cadastro_asc"
@@ -88,13 +95,34 @@ function ProcessosPage() {
   const [editing, setEditing] = useState<ProcessoResumoRow | null>(null);
 
   const list = useQuery({
-    queryKey: ["processos-resumo", buscaDeferred, statusFilter, tipoAcaoFilter, prazoFilter, order],
+    queryKey: [
+      "processos-resumo",
+      buscaDeferred,
+      statusFilter,
+      tipoAcaoFilter,
+      autorFilter,
+      reuFilter,
+      numeroFilter,
+      areaFilter,
+      indicacaoFilter,
+      entradaDeFilter,
+      entradaAteFilter,
+      prazoFilter,
+      order,
+    ],
     queryFn: () =>
       listProcessosResumo({
         data: {
           q: buscaDeferred || undefined,
           status: statusFilter !== "all" ? statusFilter : undefined,
           tipo_acao: tipoAcaoFilter !== "all" ? tipoAcaoFilter : undefined,
+          autor: autorFilter || undefined,
+          reu: reuFilter || undefined,
+          numero_cnj: numeroFilter || undefined,
+          area: areaFilter || undefined,
+          indicacao_id: indicacaoFilter !== "all" ? indicacaoFilter : undefined,
+          data_inicio_de: entradaDeFilter || undefined,
+          data_inicio_ate: entradaAteFilter || undefined,
           prazo_em_aberto:
             prazoFilter === "aberto" ? true : prazoFilter === "sem_prazo" ? false : undefined,
           order,
@@ -383,6 +411,95 @@ function ProcessosPage() {
               <SelectItem value="cadastro_asc">Cadastro: antigos primeiro</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      <div className="shrink-0 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="min-w-0">
+          <Label className="text-xs">Autor / responsável</Label>
+          <Input
+            value={autorFilter}
+            onChange={(e) => setAutorFilter(e.target.value)}
+            placeholder="Filtrar"
+          />
+        </div>
+        <div className="min-w-0">
+          <Label className="text-xs">Réu</Label>
+          <Input
+            value={reuFilter}
+            onChange={(e) => setReuFilter(e.target.value)}
+            placeholder="Filtrar"
+          />
+        </div>
+        <div className="min-w-0">
+          <Label className="text-xs">Nº do processo</Label>
+          <Input
+            value={numeroFilter}
+            onChange={(e) => setNumeroFilter(e.target.value)}
+            placeholder="Filtrar"
+            inputMode="numeric"
+          />
+        </div>
+        <div className="min-w-0">
+          <Label className="text-xs">Área</Label>
+          <Input
+            value={areaFilter}
+            onChange={(e) => setAreaFilter(e.target.value)}
+            placeholder="Filtrar"
+          />
+        </div>
+        <div className="min-w-0">
+          <Label className="text-xs">Indicação</Label>
+          <Select value={indicacaoFilter} onValueChange={setIndicacaoFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {(indicacoes.data ?? []).map((indicacao) => (
+                <SelectItem key={indicacao.id} value={indicacao.id}>
+                  {indicacao.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-0">
+          <Label className="text-xs">Entrada a partir de</Label>
+          <Input
+            type="date"
+            value={entradaDeFilter}
+            onChange={(e) => setEntradaDeFilter(e.target.value)}
+          />
+        </div>
+        <div className="min-w-0">
+          <Label className="text-xs">Entrada até</Label>
+          <Input
+            type="date"
+            value={entradaAteFilter}
+            onChange={(e) => setEntradaAteFilter(e.target.value)}
+          />
+        </div>
+        <div className="flex items-end">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              setBusca("");
+              setStatusFilter("all");
+              setTipoAcaoFilter("all");
+              setAutorFilter("");
+              setReuFilter("");
+              setNumeroFilter("");
+              setAreaFilter("");
+              setIndicacaoFilter("all");
+              setEntradaDeFilter("");
+              setEntradaAteFilter("");
+              setPrazoFilter("all");
+            }}
+          >
+            Limpar filtros
+          </Button>
         </div>
       </div>
 

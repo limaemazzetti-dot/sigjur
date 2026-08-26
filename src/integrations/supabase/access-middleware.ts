@@ -15,3 +15,17 @@ export const requireEditorAccess = createMiddleware({ type: "function" }).server
     return next();
   },
 );
+
+/**
+ * Operações administrativas (usuários, permissões e cópias completas dos
+ * dados) não podem ser executadas por perfis de editor ou visualizador.
+ */
+export const requireAdminAccess = createMiddleware({ type: "function" }).server(
+  async ({ next, context }) => {
+    const accessLevel = (context as unknown as { accessLevel?: AccessLevel }).accessLevel;
+    if (accessLevel !== "admin") {
+      throw new Error("Acesso restrito a administradores.");
+    }
+    return next();
+  },
+);

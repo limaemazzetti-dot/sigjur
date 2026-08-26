@@ -203,7 +203,7 @@ export const upsertLancamento = createServerFn({ method: "POST" })
     if (rest.tipo === "saida" && fornecedor_id) {
       const { data: supplier, error: supplierError } = await context.supabase
         .from("clientes")
-        .select("*")
+        .select("id, fornecedor, observacoes")
         .eq("id", fornecedor_id)
         .maybeSingle();
       if (supplierError) throw new Error(supplierError.message);

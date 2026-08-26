@@ -190,6 +190,13 @@ export const listProcessos = createServerFn({ method: "POST" })
         cliente_id: z.string().uuid().optional(),
         q: z.string().optional(),
         tipo_acao: z.string().optional(),
+        autor: z.string().optional(),
+        reu: z.string().optional(),
+        numero_cnj: z.string().optional(),
+        area: z.string().optional(),
+        indicacao_id: z.string().uuid().optional(),
+        data_inicio_de: z.string().date().optional(),
+        data_inicio_ate: z.string().date().optional(),
         prazo_em_aberto: z.boolean().optional(),
         order: ProcessoOrder.default("cadastro_desc"),
       })
@@ -289,15 +296,29 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
     );
     if (data.status) q = q.eq("status", data.status);
     if (data.tipo_acao) q = q.eq("tipo_acao", data.tipo_acao);
+    if (data.indicacao_id) q = q.eq("indicacao_id", data.indicacao_id);
+    if (data.data_inicio_de) q = q.gte("data_inicio", data.data_inicio_de);
+    if (data.data_inicio_ate) q = q.lte("data_inicio", data.data_inicio_ate);
     if (data.prazo_em_aberto === true) q = q.eq("prazo_em_aberto", true);
     if (data.prazo_em_aberto === false)
       q = q.or("prazo_em_aberto.eq.false,prazo_em_aberto.is.null");
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     const allProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
-    const processos = data.q
-      ? allProcessos.filter((p) => matchesProcessoSearch(p, data.q!))
-      : allProcessos;
+    const includesText = (value: string | null | undefined, filter: string | undefined) =>
+      !filter || normalizeSearch(value ?? "").includes(normalizeSearch(filter));
+    const processos = allProcessos.filter((p) => {
+      if (data.q && !matchesProcessoSearch(p, data.q)) return false;
+      if (!includesText([p.autor, p.clientes?.nome].filter(Boolean).join(" "), data.autor))
+        return false;
+      if (!includesText(p.reu, data.reu)) return false;
+      if (data.numero_cnj) {
+        const wanted = data.numero_cnj.replace(/\D/g, "");
+        if (!(p.numero_cnj ?? "").replace(/\D/g, "").includes(wanted)) return false;
+      }
+      if (!includesText(p.area ?? p.materia, data.area)) return false;
+      return true;
+    });
     if (processos.length === 0) return [] as ProcessoResumoRow[];
 
     const ids = processos.map((p) => p.id);

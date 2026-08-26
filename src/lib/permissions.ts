@@ -3,7 +3,7 @@ export const ALL_PAGES: { path: string; label: string; group: string }[] = [
   { path: "/dashboard", label: "Painel", group: "Visão geral" },
   { path: "/processos", label: "Processos", group: "Jurídico" },
   { path: "/audiencias", label: "Audiências", group: "Jurídico" },
-  { path: "/prazos", label: "Prazos", group: "Jurídico" },
+  { path: "/prazos", label: "Agenda", group: "Jurídico" },
   { path: "/pericias", label: "Perícias", group: "Jurídico" },
   { path: "/clientes", label: "Clientes", group: "Jurídico" },
   { path: "/modelos", label: "Modelos", group: "Jurídico" },

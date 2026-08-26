@@ -3,8 +3,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireEditorAccess } from "@/integrations/supabase/access-middleware";
 import { renderBpcLoasKitText } from "@/lib/bpc-loas-kit";
+import { encryptSensitiveValue } from "@/lib/field-encryption.server";
 
 const FORNECEDOR_MARKER = "[[SIGJUR:FORNECEDOR]]";
+
+// Nunca envie a credencial gov.br para listas, exportações ou consultas usadas
+// na geração de documentos. O campo só é aceito para gravação no servidor.
+const CLIENTE_SAFE_COLUMNS =
+  "id, tipo, fornecedor, nome, cpf_cnpj, rg, email, telefone, profissao, nacionalidade, data_aniversario, sexo, estado_civil, como_conheceu, endereco, bairro, cidade, estado, cep, observacoes, representante_nome, representante_nacionalidade, representante_profissao, representante_data_nascimento, representante_rg, representante_cpf, representante_parentesco, template_ids, created_at, updated_at";
 
 function decodeClienteRow(row: Record<string, unknown>): ClienteRow {
   const rawObservacoes = typeof row.observacoes === "string" ? row.observacoes : "";
@@ -51,6 +57,7 @@ const ClienteInput = z.object({
   cep: z.string().nullable().optional(),
   observacoes: z.string().nullable().optional(),
   senha_gov_br: z.string().max(200).nullable().optional(),
+  remover_senha_gov_br: z.boolean().optional(),
   representante_nome: z.string().nullable().optional(),
   representante_nacionalidade: z.string().nullable().optional(),
   representante_profissao: z.string().nullable().optional(),
@@ -69,7 +76,7 @@ export const listClientes = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     let q = context.supabase
       .from("clientes" as never)
-      .select("*")
+      .select(CLIENTE_SAFE_COLUMNS)
       .order("nome");
     if (data.q) q = q.ilike("nome", `%${data.q}%`);
     const { data: rows, error } = await q;
@@ -125,7 +132,9 @@ export const upsertCliente = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, requireEditorAccess])
   .inputValidator((d: unknown) => ClienteInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { ...persisted } = data;
+    const { senha_gov_br, remover_senha_gov_br, ...persisted } = data;
+    const senhaGovBr = senha_gov_br?.trim();
+    const senhaPersistida = senhaGovBr ? await encryptSensitiveValue(senhaGovBr) : undefined;
     const preferredPayload: Record<string, unknown> = {
       ...persisted,
       email: data.email === "" ? null : data.email,
@@ -134,6 +143,11 @@ export const upsertCliente = createServerFn({ method: "POST" })
       observacoes: cleanObservacoes(data.observacoes),
       criado_por: context.userId,
     };
+    // Em edição, campo vazio significa "não alterar". Isso impede que uma
+    // credencial seja apagada por acidente e evita devolvê-la ao navegador.
+    // A coluna sensível é atualizada abaixo somente com o cliente de serviço,
+    // após as permissões do usuário terem sido verificadas pelo middleware.
+    const shouldUpdateSenha = !data.id || !!senhaPersistida || remover_senha_gov_br === true;
     const legacyPayload: Record<string, unknown> = {
       ...preferredPayload,
       observacoes: legacyObservacoes(data.observacoes, data.fornecedor) || null,
@@ -173,11 +187,20 @@ export const upsertCliente = createServerFn({ method: "POST" })
       clienteId = (insertedResult.data as { id: string }).id;
     }
 
+    if (shouldUpdateSenha) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: senhaError } = await supabaseAdmin
+        .from("clientes" as never)
+        .update({ senha_gov_br: remover_senha_gov_br ? null : (senhaPersistida ?? null) } as never)
+        .eq("id", clienteId);
+      if (senhaError) throw new Error(senhaError.message);
+    }
+
     // Auto-gerar um único documento com base no DOCX original do Kit BPC/LOAS.
     try {
       const { data: cliente } = await context.supabase
         .from("clientes" as never)
-        .select("*")
+        .select(CLIENTE_SAFE_COLUMNS)
         .eq("id", clienteId)
         .maybeSingle();
       if (cliente) {
@@ -247,7 +270,7 @@ export const getCliente = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("clientes" as never)
-      .select("*")
+      .select(CLIENTE_SAFE_COLUMNS)
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);

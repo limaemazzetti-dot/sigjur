@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireEditorAccess } from "@/integrations/supabase/access-middleware";
+import { requireAdminAccess } from "@/integrations/supabase/access-middleware";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 
@@ -30,7 +30,7 @@ async function dumpAll(supabase: SupabaseClient<Database>): Promise<Record<strin
 }
 
 export const createBackupSnapshot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth, requireEditorAccess])
+  .middleware([requireSupabaseAuth, requireAdminAccess])
   .inputValidator((d: unknown) =>
     z.object({ tag: z.string().trim().max(120).optional() }).parse(d ?? {}),
   )
@@ -52,7 +52,7 @@ export const createBackupSnapshot = createServerFn({ method: "POST" })
   });
 
 export const listBackupSnapshots = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, requireAdminAccess])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("backups_snapshots")
@@ -63,7 +63,7 @@ export const listBackupSnapshots = createServerFn({ method: "GET" })
   });
 
 export const downloadBackupSnapshot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, requireAdminAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
@@ -76,7 +76,7 @@ export const downloadBackupSnapshot = createServerFn({ method: "POST" })
   });
 
 export const deleteBackupSnapshot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth, requireEditorAccess])
+  .middleware([requireSupabaseAuth, requireAdminAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("backups_snapshots").delete().eq("id", data.id);
@@ -85,7 +85,7 @@ export const deleteBackupSnapshot = createServerFn({ method: "POST" })
   });
 
 export const exportBackupNow = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, requireAdminAccess])
   .handler(async ({ context }) => {
     const dump = await dumpAll(context.supabase);
     return { data: dump as unknown as Json };

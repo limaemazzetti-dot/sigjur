@@ -80,7 +80,12 @@ function PericiasPage() {
   const list = useQuery({
     queryKey: ["prazos", statusFilter],
     queryFn: () =>
-      listPrazos({ data: { status: statusFilter === "todos" ? undefined : statusFilter } }),
+      listPrazos({
+        data: {
+          status: statusFilter === "todos" ? undefined : statusFilter,
+          tipo_evento: "pericia",
+        },
+      }),
   });
 
   const qc = useQueryClient();
@@ -94,10 +99,7 @@ function PericiasPage() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Erro ao excluir"),
   });
 
-  const pericias = useMemo(() => {
-    const re = /per[íi]cia/i;
-    return (list.data ?? []).filter((p) => re.test(p.titulo) || re.test(p.descricao ?? ""));
-  }, [list.data]);
+  const pericias = useMemo(() => list.data ?? [], [list.data]);
 
   function openNew() {
     setEditing(null);
@@ -350,6 +352,7 @@ function PericiaDialog({
       data_prazo: data,
       prioridade: editing?.prioridade ?? "media",
       status,
+      tipo_evento: "pericia",
     });
   }
 
