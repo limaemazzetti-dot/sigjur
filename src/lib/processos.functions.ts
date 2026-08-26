@@ -215,13 +215,36 @@ export const listProcessos = createServerFn({ method: "POST" })
     if (data.materia) q = q.eq("materia", data.materia);
     if (data.cliente_id) q = q.eq("cliente_id", data.cliente_id);
     if (data.tipo_acao) q = q.eq("tipo_acao", data.tipo_acao);
-    if (data.prazo_em_aberto === true) q = q.eq("prazo_em_aberto", true);
-    if (data.prazo_em_aberto === false)
-      q = q.or("prazo_em_aberto.eq.false,prazo_em_aberto.is.null");
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const processos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
-    return data.q ? processos.filter((p) => matchesProcessoSearch(p, data.q!)) : processos;
+    const baseProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
+    const ids = baseProcessos.map((processo) => processo.id);
+    const { data: eventosAbertos, error: eventosError } = ids.length
+      ? await context.supabase
+          .from("prazos" as never)
+          .select("processo_id")
+          .in("processo_id", ids)
+          .eq("status", "aberto")
+      : { data: [], error: null };
+    if (eventosError) throw new Error(eventosError.message);
+    const processosComEventoAberto = new Set(
+      ((eventosAbertos ?? []) as Array<{ processo_id: string | null }>)
+        .map((evento) => evento.processo_id)
+        .filter((id): id is string => !!id),
+    );
+    const processos = baseProcessos
+      .map((processo) => ({
+        ...processo,
+        // Agenda, Audiências e Perícias usam a mesma tabela de eventos. A
+        // coluna é sempre calculada, sem depender de uma marcação antiga.
+        prazo_em_aberto: !!processo.data_prazo || processosComEventoAberto.has(processo.id),
+      }))
+      .filter((processo) => {
+        if (data.prazo_em_aberto !== undefined && processo.prazo_em_aberto !== data.prazo_em_aberto)
+          return false;
+        return !data.q || matchesProcessoSearch(processo, data.q);
+      });
+    return processos;
   });
 
 export type ProcessoReferenceOptions = {
@@ -327,10 +350,7 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
       ...processo,
       // A coluna deixa de depender da marcação manual: uma data de prazo no
       // próprio processo ou qualquer evento aberto vinculado já exige atenção.
-      prazo_em_aberto:
-        !!processo.data_prazo ||
-        !!processo.prazo_em_aberto ||
-        processosComEventoAberto.has(processo.id),
+      prazo_em_aberto: !!processo.data_prazo || processosComEventoAberto.has(processo.id),
     }));
     const includesText = (value: string | null | undefined, filter: string | undefined) =>
       !filter || normalizeSearch(value ?? "").includes(normalizeSearch(filter));
