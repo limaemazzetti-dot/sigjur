@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AgendaAlert } from "@/components/agenda-alert";
 import { TableColumnResizer } from "@/components/table-column-resizer";
+import { ContentHelp } from "@/components/content-help";
 import { getMe } from "@/lib/users.functions";
 import { ALL_PAGES } from "@/lib/permissions";
 
@@ -102,7 +103,10 @@ function AuthenticatedLayout() {
               </div>
             </div>
           </header>
-          <main className="flex-1 min-h-0 overflow-hidden bg-muted/30 p-2 sm:p-3 lg:p-4">
+          <main
+            data-content-area
+            className="flex-1 min-h-0 overflow-hidden bg-muted/30 p-2 sm:p-3 lg:p-4"
+          >
             <div
               key={location.pathname}
               className="animate-fade-in h-full w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-contain rounded-xl border border-border/60 bg-background shadow-sm [scrollbar-gutter:stable]"
@@ -130,6 +134,7 @@ function AuthenticatedLayout() {
                 )}
               </div>
             </div>
+            <ContentHelp />
           </main>
         </div>
         <AgendaAlert />
