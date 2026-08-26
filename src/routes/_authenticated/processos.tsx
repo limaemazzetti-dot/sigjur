@@ -1009,10 +1009,11 @@ function ProcessoForm({
         <TabsContent value="valores" className="space-y-4 pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Valor da Causa (R$)</Label>
-              <CurrencyInput
-                value={form.valor_causa}
-                onValueChange={(value) => set("valor_causa", value)}
+              <Label>Total em Honorários (R$)</Label>
+              <Input
+                readOnly
+                value={formatBRL(totalHonorarios)}
+                className="bg-primary/10 border-primary/40 text-lg font-bold tabular-nums text-primary"
               />
             </div>
             <div>
@@ -1051,19 +1052,14 @@ function ProcessoForm({
             </div>
           </div>
           <div>
-            <Label>Total em Honorários (R$)</Label>
-            <Input readOnly value={formatBRL(totalHonorarios)} className="bg-muted" />
-          </div>
-          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-4">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              Total em honorários
-            </p>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-primary">
-              {formatBRL(totalHonorarios)}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Honorários em R$, honorários em % e sucumbências em %, calculados sobre o
-              acordo/sentença.
+            <Label>Valor da Causa (R$)</Label>
+            <CurrencyInput
+              value={form.valor_causa}
+              onValueChange={(value) => set("valor_causa", value)}
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              O total considera somente honorários em R$, honorários em % e sucumbências em %. Os
+              percentuais usam o valor de acordo/sentença como base de cálculo.
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
