@@ -502,7 +502,7 @@ function ProcessoEdit({
           />
         </div>
         <div>
-          <Label>Indicação</Label>
+          <Label>Indicador</Label>
           <Select
             value={f.indicacao_id ?? "__none__"}
             onValueChange={(value) => set("indicacao_id", value === "__none__" ? null : value)}
@@ -511,7 +511,7 @@ function ProcessoEdit({
               <SelectValue placeholder="Selecione quem indicou" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__none__">Sem indicação</SelectItem>
+              <SelectItem value="__none__">Sem indicador</SelectItem>
               {indicacoes.map((indicacao) => (
                 <SelectItem key={indicacao.id} value={indicacao.id}>
                   {indicacao.nome}

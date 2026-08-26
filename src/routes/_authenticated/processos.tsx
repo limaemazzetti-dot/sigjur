@@ -191,7 +191,7 @@ function ProcessosPage() {
         Matéria: p.materia ?? "",
         Área: p.area ?? p.materia ?? "",
         Responsável: p.clientes?.nome ?? "",
-        Indicação: p.indicacoes?.nome ?? "",
+        Indicador: p.indicacoes?.nome ?? "",
         "Data de entrada": p.data_inicio
           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
           : "",
@@ -214,7 +214,7 @@ function ProcessosPage() {
         { header: "Matéria", dataKey: "materia" },
         { header: "Área", dataKey: "area" },
         { header: "Data de entrada", dataKey: "entrada" },
-        { header: "Indicação", dataKey: "indicacao" },
+        { header: "Indicador", dataKey: "indicacao" },
       ],
       rows: list.data.map((p) => ({
         cnj: p.numero_cnj ?? "—",
@@ -447,7 +447,7 @@ function ProcessosPage() {
           />
         </div>
         <div className="min-w-0">
-          <Label className="text-xs">Indicação</Label>
+          <Label className="text-xs">Indicador</Label>
           <Select value={indicacaoFilter} onValueChange={setIndicacaoFilter}>
             <SelectTrigger>
               <SelectValue />
@@ -551,7 +551,7 @@ function ProcessosPage() {
                     Prazo em Aberto?
                   </th>
                   <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Indicação
+                    Indicador
                   </th>
                 </tr>
               </thead>
@@ -1125,7 +1125,7 @@ function ProcessoForm({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Indicação</Label>
+              <Label>Indicador</Label>
               <Select
                 value={form.indicacao_id ?? "__none__"}
                 onValueChange={(value) => set("indicacao_id", value === "__none__" ? null : value)}
@@ -1134,7 +1134,7 @@ function ProcessoForm({
                   <SelectValue placeholder="Selecione quem indicou" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Sem indicação</SelectItem>
+                  <SelectItem value="__none__">Sem indicador</SelectItem>
                   {indicacoes.map((indicacao) => (
                     <SelectItem key={indicacao.id} value={indicacao.id}>
                       {indicacao.nome}

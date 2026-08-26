@@ -96,13 +96,13 @@ export function CadastrosPage() {
 
       <p className="rounded-xl border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
         É aqui que você inclui, renomeia, desativa ou exclui as opções de Tipo de Ação, Matéria,
-        Fase, Advogado, Status e Indicações. Alterar uma opção não apaga os processos já
+        Fase, Advogado, Status e Indicadores. Alterar uma opção não apaga os processos já
         cadastrados.
       </p>
 
       <Tabs defaultValue="indicacoes" className="w-full">
         <TabsList className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 w-full h-auto">
-          <TabsTrigger value="indicacoes">Indicações</TabsTrigger>
+          <TabsTrigger value="indicacoes">Indicadores</TabsTrigger>
           {CATEGORIAS.map((c) => (
             <TabsTrigger key={c} value={c}>
               {CATEGORIA_LABEL[c]}
@@ -161,7 +161,7 @@ function IndicacoesManager({ canEdit }: { canEdit: boolean }) {
       setForm(emptyIndicacao());
       setEditingId(null);
       refresh();
-      toast.success(editingId ? "Indicação atualizada" : "Indicação cadastrada");
+      toast.success(editingId ? "Indicador atualizado" : "Indicador cadastrado");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -174,7 +174,7 @@ function IndicacoesManager({ canEdit }: { canEdit: boolean }) {
     mutationFn: (id: string) => deleteIndicacao({ data: { id } }),
     onSuccess: () => {
       refresh();
-      toast.success("Indicação removida");
+      toast.success("Indicador removido");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -199,14 +199,14 @@ function IndicacoesManager({ canEdit }: { canEdit: boolean }) {
       <CardContent className="p-5 space-y-5">
         <p className="text-sm text-muted-foreground">
           Cadastre a pessoa ou empresa que indicou o cliente. Ela ficará disponível no processo e
-          aparecerá na coluna Indicação da lista de Processos.
+          aparecerá na coluna Indicador, ao lado de Prazo em aberto, na lista de Processos.
         </p>
         <form
           className="space-y-3"
           onSubmit={(event) => {
             event.preventDefault();
             if (!form.nome.trim()) {
-              toast.error("Informe o nome da indicação.");
+              toast.error("Informe o nome do indicador.");
               return;
             }
             save.mutate();
@@ -266,7 +266,7 @@ function IndicacoesManager({ canEdit }: { canEdit: boolean }) {
           <div className="flex flex-wrap gap-2">
             <Button type="submit" disabled={!canEdit || save.isPending}>
               <Save className="size-4 mr-2" />
-              {editingId ? "Salvar alteração" : "Adicionar indicação"}
+              {editingId ? "Salvar alteração" : "Adicionar indicador"}
             </Button>
             {editingId && (
               <Button
@@ -338,7 +338,7 @@ function IndicacoesManager({ canEdit }: { canEdit: boolean }) {
             ))
           ) : (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              Nenhuma indicação cadastrada.
+              Nenhum indicador cadastrado.
             </p>
           )}
         </div>
