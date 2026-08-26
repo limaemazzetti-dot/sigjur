@@ -691,10 +691,9 @@ function ProcessoForm({
   const honorariosPercentualValor = (baseCalculo * percentual(form.honorarios_percentual)) / 100;
   const sucumbenciasPercentualValor =
     (baseCalculo * percentual(form.sucumbencias_percentual)) / 100;
+  const honorariosContratuais = Number(form.honorarios_valor ?? 0) || 0;
   const totalHonorarios =
-    (Number(form.honorarios_valor ?? 0) || 0) +
-    honorariosPercentualValor +
-    sucumbenciasPercentualValor;
+    honorariosContratuais + honorariosPercentualValor + sucumbenciasPercentualValor;
   return (
     <form
       className="space-y-4"
@@ -1026,7 +1025,7 @@ function ProcessoForm({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <Label>Honorários em R$</Label>
+              <Label>Honorários contratuais (R$)</Label>
               <CurrencyInput
                 value={form.honorarios_valor}
                 onValueChange={(value) => set("honorarios_valor", value)}
@@ -1058,8 +1057,10 @@ function ProcessoForm({
               onValueChange={(value) => set("valor_causa", value)}
             />
             <p className="mt-2 text-xs text-muted-foreground">
-              O total considera somente honorários em R$, honorários em % e sucumbências em %. Os
-              percentuais usam o valor de acordo/sentença como base de cálculo.
+              Contratuais {formatBRL(honorariosContratuais)} + percentuais{" "}
+              {formatBRL(honorariosPercentualValor)} + sucumbências{" "}
+              {formatBRL(sucumbenciasPercentualValor)}. Os percentuais usam o valor de
+              acordo/sentença como base de cálculo.
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
