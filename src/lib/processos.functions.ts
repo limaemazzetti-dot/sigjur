@@ -53,12 +53,12 @@ const ProcessoInput = z.object({
   data_prazo: z.string().nullable().optional(),
   detalhes_prazo: z.string().nullable().optional(),
   origem: z.string().nullable().optional(),
+  indicacao_id: z.string().uuid().nullable().optional(),
   valor_causa: z.number().nullable().optional(),
   valor_acordo: z.number().nullable().optional(),
   honorarios_valor: z.number().nullable().optional(),
   honorarios_percentual: z.number().nullable().optional(),
   sucumbencias_percentual: z.number().nullable().optional(),
-  sucumbencias_valor: z.number().nullable().optional(),
   cliente_id: z.string().uuid().nullable().optional(),
   cliente_qualificacao: z.string().nullable().optional(),
   outro_envolvido: z.string().nullable().optional(),
@@ -96,12 +96,12 @@ export type ProcessoRow = {
   data_prazo: string | null;
   detalhes_prazo: string | null;
   origem: string | null;
+  indicacao_id: string | null;
   valor_causa: number | null;
   valor_acordo: number | null;
   honorarios_valor: number | null;
   honorarios_percentual: number | null;
   sucumbencias_percentual: number | null;
-  sucumbencias_valor: number | null;
   cliente_id: string | null;
   cliente_qualificacao: string | null;
   outro_envolvido: string | null;
@@ -114,6 +114,7 @@ export type ProcessoRow = {
   created_at: string;
   updated_at: string;
   clientes?: { id: string; nome: string; tipo: "pf" | "pj" } | null;
+  indicacoes?: { id: string; nome: string } | null;
 };
 
 const ProcessoOrder = z.enum(["entrada_desc", "entrada_asc", "cadastro_desc", "cadastro_asc"]);
@@ -153,6 +154,7 @@ function matchesProcessoSearch(processo: ProcessoRow, rawSearch: string) {
       processo.materia,
       processo.area,
       processo.advogado,
+      processo.indicacoes?.nome,
     ]
       .filter(Boolean)
       .join(" "),
@@ -197,7 +199,9 @@ export const listProcessos = createServerFn({ method: "POST" })
     let q = applyProcessoOrder(
       context.supabase
         .from("processos" as never)
-        .select("*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo)"),
+        .select(
+          "*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
+        ),
       data.order,
     );
     if (data.status) q = q.eq("status", data.status);
@@ -278,7 +282,9 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
     let q = applyProcessoOrder(
       context.supabase
         .from("processos" as never)
-        .select("*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo)"),
+        .select(
+          "*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
+        ),
       data.order,
     );
     if (data.status) q = q.eq("status", data.status);
@@ -352,7 +358,9 @@ export const getProcesso = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("processos" as never)
-      .select("*, clientes:clientes!processos_cliente_id_fkey(id, nome, telefone, email)")
+      .select(
+        "*, clientes:clientes!processos_cliente_id_fkey(id, nome, telefone, email), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
+      )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);

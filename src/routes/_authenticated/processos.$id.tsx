@@ -31,6 +31,7 @@ import { ProcessTimeline } from "@/components/process-timeline";
 import { useAutoSync } from "@/lib/use-auto-sync";
 import { listStatusProcesso } from "@/lib/status-processo.functions";
 import { CurrencyInput } from "@/components/currency-input";
+import { listIndicacoes, type IndicacaoRow } from "@/lib/indicacoes.functions";
 
 export const Route = createFileRoute("/_authenticated/processos/$id")({
   component: ProcessoDetalhe,
@@ -57,6 +58,11 @@ function ProcessoDetalhe() {
   const statusOpcoes = useQuery({
     queryKey: ["status-processo"],
     queryFn: () => listStatusProcesso({ data: {} }),
+    staleTime: 60_000,
+  });
+  const indicacoes = useQuery({
+    queryKey: ["indicacoes"],
+    queryFn: () => listIndicacoes({ data: {} }),
     staleTime: 60_000,
   });
   const statusLabels = {
@@ -179,6 +185,7 @@ function ProcessoDetalhe() {
           <CardContent>
             <ProcessoEdit
               initial={p}
+              indicacoes={indicacoes.data ?? []}
               onSave={(d) => mSave.mutate({ ...d, id: p.id })}
               loading={mSave.isPending}
             />
@@ -382,6 +389,7 @@ function ProcessoDetalhe() {
 
 function ProcessoEdit({
   initial,
+  indicacoes,
   onSave,
   loading,
 }: {
@@ -397,8 +405,10 @@ function ProcessoEdit({
     data_protocolo: string | null;
     valor_causa: number | null;
     origem: string | null;
+    indicacao_id: string | null;
     observacoes: string | null;
   };
+  indicacoes: IndicacaoRow[];
   onSave: (d: ProcessoFormInput) => void;
   loading: boolean;
 }) {
@@ -414,6 +424,7 @@ function ProcessoEdit({
     data_protocolo: initial.data_protocolo ?? "",
     valor_causa: initial.valor_causa,
     origem: initial.origem ?? "",
+    indicacao_id: initial.indicacao_id ?? null,
     observacoes: initial.observacoes ?? "",
   });
   const statusOpcoes = useQuery({
@@ -490,8 +501,27 @@ function ProcessoEdit({
             onValueChange={(value) => set("valor_causa", value)}
           />
         </div>
-        <div className="col-span-2">
-          <Label>Origem</Label>
+        <div>
+          <Label>Indicação</Label>
+          <Select
+            value={f.indicacao_id ?? "__none__"}
+            onValueChange={(value) => set("indicacao_id", value === "__none__" ? null : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione quem indicou" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sem indicação</SelectItem>
+              {indicacoes.map((indicacao) => (
+                <SelectItem key={indicacao.id} value={indicacao.id}>
+                  {indicacao.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Origem / Observação</Label>
           <Input value={f.origem ?? ""} onChange={(e) => set("origem", e.target.value)} />
         </div>
         <div className="col-span-2">

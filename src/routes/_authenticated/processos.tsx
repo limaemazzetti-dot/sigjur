@@ -61,6 +61,7 @@ import { SearchableClientPicker } from "@/components/searchable-client-picker";
 import { CurrencyInput } from "@/components/currency-input";
 import { PercentageInput } from "@/components/percentage-input";
 import { listStatusProcesso } from "@/lib/status-processo.functions";
+import { listIndicacoes, type IndicacaoRow } from "@/lib/indicacoes.functions";
 
 export const Route = createFileRoute("/_authenticated/processos")({
   component: ProcessosRoute,
@@ -118,6 +119,11 @@ function ProcessosPage() {
     queryFn: () => listStatusProcesso({ data: {} }),
     staleTime: 60_000,
   });
+  const indicacoes = useQuery({
+    queryKey: ["indicacoes"],
+    queryFn: () => listIndicacoes({ data: {} }),
+    staleTime: 60_000,
+  });
   const statusLabels = {
     ...STATUS_LABEL,
     ...Object.fromEntries((statusOpcoes.data ?? []).map((item) => [item.codigo, item.nome])),
@@ -159,6 +165,7 @@ function ProcessosPage() {
         Matéria: p.materia ?? "",
         Área: p.area ?? p.materia ?? "",
         Responsável: p.clientes?.nome ?? "",
+        Indicação: p.indicacoes?.nome ?? "",
         "Data de entrada": p.data_inicio
           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
           : "",
@@ -181,6 +188,7 @@ function ProcessosPage() {
         { header: "Matéria", dataKey: "materia" },
         { header: "Área", dataKey: "area" },
         { header: "Data de entrada", dataKey: "entrada" },
+        { header: "Indicação", dataKey: "indicacao" },
       ],
       rows: list.data.map((p) => ({
         cnj: p.numero_cnj ?? "—",
@@ -195,13 +203,14 @@ function ProcessosPage() {
         entrada: p.data_inicio
           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
           : "—",
+        indicacao: p.indicacoes?.nome ?? "—",
       })),
       footerNote: `Gerado em ${new Date().toLocaleString("pt-BR")}`,
     });
   }
 
   return (
-    <div className="h-full min-h-0 p-4 pb-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0 flex flex-col gap-6 max-w-[1600px] mx-auto w-full min-w-0 overflow-x-hidden">
+    <div className="h-full min-h-0 p-4 pb-0 sm:p-6 sm:pb-0 xl:px-6 xl:pb-0 2xl:px-8 2xl:pb-0 flex flex-col gap-6 max-w-none mx-auto w-full min-w-0 overflow-x-hidden">
       <header className="shrink-0 grid grid-cols-[minmax(0,1fr)] items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Jurídico</p>
@@ -298,6 +307,7 @@ function ProcessosPage() {
               </DialogHeader>
               <ProcessoForm
                 clientes={(clientes.data ?? []).filter((cliente) => !cliente.fornecedor)}
+                indicacoes={indicacoes.data ?? []}
                 onSubmit={(d) => mSave.mutate(d)}
                 loading={mSave.isPending}
               />
@@ -385,15 +395,16 @@ function ProcessosPage() {
           <div className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable]">
             <table className="w-full table-fixed text-sm border-collapse">
               <colgroup>
-                <col className="w-[4%]" />
-                <col className="w-[14%]" />
-                <col className="w-[14%]" />
-                <col className="w-[9%]" />
+                <col className="w-[3%]" />
                 <col className="w-[13%]" />
+                <col className="w-[12%]" />
+                <col className="w-[8%]" />
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[8%]" />
+                <col className="w-[9%]" />
+                <col className="w-[8%]" />
                 <col className="w-[15%]" />
-                <col className="w-[10%]" />
-                <col className="w-[11%]" />
-                <col className="w-[10%]" />
               </colgroup>
               <thead className="text-black text-xs uppercase tracking-wide">
                 <tr>
@@ -423,6 +434,9 @@ function ProcessosPage() {
                   </th>
                   <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Prazo em Aberto?
+                  </th>
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                    Indicação
                   </th>
                 </tr>
               </thead>
@@ -485,6 +499,9 @@ function ProcessosPage() {
                           {p.prazo_em_aberto ? "Sim" : "Não"}
                         </span>
                       </td>
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                        {p.indicacoes?.nome ?? "—"}
+                      </td>
                     </tr>
                   );
                 })}
@@ -523,6 +540,7 @@ function ProcessosPage() {
                 <ProcessoForm
                   key={editing.id}
                   clientes={(clientes.data ?? []).filter((cliente) => !cliente.fornecedor)}
+                  indicacoes={indicacoes.data ?? []}
                   initial={editing}
                   submitLabel="Salvar alterações"
                   submitIcon="save"
@@ -565,6 +583,7 @@ function ProcessosPage() {
 
 function ProcessoForm({
   clientes,
+  indicacoes,
   onSubmit,
   loading,
   initial,
@@ -572,6 +591,7 @@ function ProcessoForm({
   submitIcon,
 }: {
   clientes: ClienteRow[];
+  indicacoes: IndicacaoRow[];
   onSubmit: (d: ProcessoFormInput) => void;
   loading: boolean;
   initial?: Partial<ProcessoFormInput> | null;
@@ -601,12 +621,12 @@ function ProcessoForm({
     data_prazo: initial?.data_prazo ?? "",
     detalhes_prazo: initial?.detalhes_prazo ?? "",
     origem: initial?.origem ?? "",
+    indicacao_id: initial?.indicacao_id ?? null,
     valor_causa: initial?.valor_causa ?? null,
     valor_acordo: initial?.valor_acordo ?? null,
     honorarios_valor: initial?.honorarios_valor ?? null,
     honorarios_percentual: initial?.honorarios_percentual ?? null,
     sucumbencias_percentual: initial?.sucumbencias_percentual ?? null,
-    sucumbencias_valor: initial?.sucumbencias_valor ?? null,
     cliente_id: initial?.cliente_id ?? null,
     cliente_qualificacao: initial?.cliente_qualificacao ?? "",
     outro_envolvido: initial?.outro_envolvido ?? "",
@@ -993,13 +1013,34 @@ function ProcessoForm({
               placeholder="https://..."
             />
           </div>
-          <div>
-            <Label>Origem / Indicação</Label>
-            <Input
-              value={form.origem ?? ""}
-              onChange={(e) => set("origem", e.target.value)}
-              placeholder="Quem indicou"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>Indicação</Label>
+              <Select
+                value={form.indicacao_id ?? "__none__"}
+                onValueChange={(value) => set("indicacao_id", value === "__none__" ? null : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione quem indicou" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem indicação</SelectItem>
+                  {indicacoes.map((indicacao) => (
+                    <SelectItem key={indicacao.id} value={indicacao.id}>
+                      {indicacao.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Origem / Observação da indicação</Label>
+              <Input
+                value={form.origem ?? ""}
+                onChange={(e) => set("origem", e.target.value)}
+                placeholder="Ex.: indicação recebida pelo WhatsApp"
+              />
+            </div>
           </div>
           <div>
             <Label>Observações</Label>

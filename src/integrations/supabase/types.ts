@@ -103,6 +103,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      indicacoes: {
+        Row: {
+          ativo: boolean;
+          cpf_cnpj: string | null;
+          created_at: string;
+          email: string | null;
+          endereco: string | null;
+          id: string;
+          nome: string;
+          observacoes: string | null;
+          telefone: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          ativo?: boolean;
+          cpf_cnpj?: string | null;
+          created_at?: string;
+          email?: string | null;
+          endereco?: string | null;
+          id?: string;
+          nome: string;
+          observacoes?: string | null;
+          telefone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          ativo?: boolean;
+          cpf_cnpj?: string | null;
+          created_at?: string;
+          email?: string | null;
+          endereco?: string | null;
+          id?: string;
+          nome?: string;
+          observacoes?: string | null;
+          telefone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       status_processo_opcoes: {
         Row: {
           ativo: boolean;
@@ -563,6 +602,7 @@ export type Database = {
           honorarios_valor: number | null;
           id: string;
           instancia: string | null;
+          indicacao_id: string | null;
           link_pasta: string | null;
           link_processo: string | null;
           materia: string | null;
@@ -578,7 +618,6 @@ export type Database = {
           reu: string;
           status: string;
           sucumbencias_percentual: number | null;
-          sucumbencias_valor: number | null;
           tipo: string | null;
           tipo_acao: string | null;
           tribunal: string | null;
@@ -606,6 +645,7 @@ export type Database = {
           honorarios_valor?: number | null;
           id?: string;
           instancia?: string | null;
+          indicacao_id?: string | null;
           link_pasta?: string | null;
           link_processo?: string | null;
           materia?: string | null;
@@ -621,7 +661,6 @@ export type Database = {
           reu: string;
           status?: string;
           sucumbencias_percentual?: number | null;
-          sucumbencias_valor?: number | null;
           tipo?: string | null;
           tipo_acao?: string | null;
           tribunal?: string | null;
@@ -649,6 +688,7 @@ export type Database = {
           honorarios_valor?: number | null;
           id?: string;
           instancia?: string | null;
+          indicacao_id?: string | null;
           link_pasta?: string | null;
           link_processo?: string | null;
           materia?: string | null;
@@ -664,7 +704,6 @@ export type Database = {
           reu?: string;
           status?: string;
           sucumbencias_percentual?: number | null;
-          sucumbencias_valor?: number | null;
           tipo?: string | null;
           tipo_acao?: string | null;
           tribunal?: string | null;
@@ -686,6 +725,13 @@ export type Database = {
             columns: ["outro_envolvido_cliente_id"];
             isOneToOne: false;
             referencedRelation: "clientes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "processos_indicacao_id_fkey";
+            columns: ["indicacao_id"];
+            isOneToOne: false;
+            referencedRelation: "indicacoes";
             referencedColumns: ["id"];
           },
         ];

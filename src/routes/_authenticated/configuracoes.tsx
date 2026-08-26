@@ -29,6 +29,13 @@ import {
   listStatusProcesso,
   updateStatusProcesso,
 } from "@/lib/status-processo.functions";
+import {
+  deleteIndicacao,
+  listIndicacoes,
+  upsertIndicacao,
+  type IndicacaoInput,
+  type IndicacaoRow,
+} from "@/lib/indicacoes.functions";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   beforeLoad: () => {
@@ -60,7 +67,7 @@ export function CadastrosPage() {
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Jurídico</p>
           <h1 className="font-serif text-2xl sm:text-3xl mt-1">Cadastros</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gerencie as opções que aparecem nos formulários e os vínculos entre clientes.
+            Gerencie as opções dos formulários, as indicações e os vínculos entre clientes.
           </p>
         </div>
         <Button
@@ -89,11 +96,12 @@ export function CadastrosPage() {
 
       <p className="rounded-xl border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
         É aqui que você inclui, renomeia, desativa ou exclui as opções de Tipo de Ação, Matéria,
-        Fase, Advogado e Status. Alterar uma opção não apaga os processos já cadastrados.
+        Fase, Advogado, Status e Indicações. Alterar uma opção não apaga os processos já
+        cadastrados.
       </p>
 
       <Tabs defaultValue="tipo_acao" className="w-full">
-        <TabsList className="grid grid-cols-3 sm:grid-cols-6 w-full h-auto">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 w-full h-auto">
           {CATEGORIAS.map((c) => (
             <TabsTrigger key={c} value={c}>
               {CATEGORIA_LABEL[c]}
@@ -101,6 +109,7 @@ export function CadastrosPage() {
           ))}
           <TabsTrigger value="vinculos">Vínculos</TabsTrigger>
           <TabsTrigger value="status">Status</TabsTrigger>
+          <TabsTrigger value="indicacoes">Indicações</TabsTrigger>
         </TabsList>
 
         {CATEGORIAS.map((c) => (
@@ -115,8 +124,225 @@ export function CadastrosPage() {
         <TabsContent value="status" className="pt-4">
           <StatusManager canEdit={canEdit} />
         </TabsContent>
+        <TabsContent value="indicacoes" className="pt-4">
+          <IndicacoesManager canEdit={canEdit} />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+const emptyIndicacao = (): IndicacaoInput => ({
+  nome: "",
+  cpf_cnpj: "",
+  telefone: "",
+  email: "",
+  endereco: "",
+  observacoes: "",
+  ativo: true,
+});
+
+function IndicacoesManager({ canEdit }: { canEdit: boolean }) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState<IndicacaoInput>(emptyIndicacao);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const list = useQuery({
+    queryKey: ["indicacoes", "all"],
+    queryFn: () => listIndicacoes({ data: { incluir_inativos: true } }),
+  });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["indicacoes"] });
+    qc.invalidateQueries({ queryKey: ["processos-resumo"] });
+  };
+  const save = useMutation({
+    mutationFn: () => upsertIndicacao({ data: editingId ? { ...form, id: editingId } : form }),
+    onSuccess: () => {
+      setForm(emptyIndicacao());
+      setEditingId(null);
+      refresh();
+      toast.success(editingId ? "Indicação atualizada" : "Indicação cadastrada");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+  const toggle = useMutation({
+    mutationFn: (item: IndicacaoRow) => upsertIndicacao({ data: { ...item, ativo: !item.ativo } }),
+    onSuccess: refresh,
+    onError: (error: Error) => toast.error(error.message),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteIndicacao({ data: { id } }),
+    onSuccess: () => {
+      refresh();
+      toast.success("Indicação removida");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+  const set = <K extends keyof IndicacaoInput>(key: K, value: IndicacaoInput[K]) => {
+    setForm((current) => ({ ...current, [key]: value }));
+  };
+  const startEdit = (item: IndicacaoRow) => {
+    setEditingId(item.id);
+    setForm({
+      nome: item.nome,
+      cpf_cnpj: item.cpf_cnpj ?? "",
+      telefone: item.telefone ?? "",
+      email: item.email ?? "",
+      endereco: item.endereco ?? "",
+      observacoes: item.observacoes ?? "",
+      ativo: item.ativo,
+    });
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-5 space-y-5">
+        <p className="text-sm text-muted-foreground">
+          Cadastre a pessoa ou empresa que indicou o cliente. Ela ficará disponível no processo e
+          aparecerá na coluna Indicação da lista de Processos.
+        </p>
+        <form
+          className="space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!form.nome.trim()) {
+              toast.error("Informe o nome da indicação.");
+              return;
+            }
+            save.mutate();
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>Nome *</Label>
+              <Input
+                value={form.nome}
+                onChange={(e) => set("nome", e.target.value)}
+                disabled={!canEdit}
+              />
+            </div>
+            <div>
+              <Label>CPF/CNPJ</Label>
+              <Input
+                value={form.cpf_cnpj ?? ""}
+                onChange={(e) => set("cpf_cnpj", e.target.value)}
+                disabled={!canEdit}
+              />
+            </div>
+            <div>
+              <Label>Telefone</Label>
+              <Input
+                value={form.telefone ?? ""}
+                onChange={(e) => set("telefone", e.target.value)}
+                disabled={!canEdit}
+              />
+            </div>
+            <div>
+              <Label>E-mail</Label>
+              <Input
+                type="email"
+                value={form.email ?? ""}
+                onChange={(e) => set("email", e.target.value)}
+                disabled={!canEdit}
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Endereço</Label>
+            <Input
+              value={form.endereco ?? ""}
+              onChange={(e) => set("endereco", e.target.value)}
+              disabled={!canEdit}
+            />
+          </div>
+          <div>
+            <Label>Observações</Label>
+            <Input
+              value={form.observacoes ?? ""}
+              onChange={(e) => set("observacoes", e.target.value)}
+              disabled={!canEdit}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={!canEdit || save.isPending}>
+              <Save className="size-4 mr-2" />
+              {editingId ? "Salvar alteração" : "Adicionar indicação"}
+            </Button>
+            {editingId && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm(emptyIndicacao());
+                }}
+              >
+                Cancelar
+              </Button>
+            )}
+          </div>
+        </form>
+
+        <div className="divide-y divide-border/60">
+          {list.data?.length ? (
+            list.data.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p
+                    className={
+                      item.ativo ? "font-medium" : "font-medium text-muted-foreground line-through"
+                    }
+                  >
+                    {item.nome}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {[item.cpf_cnpj, item.telefone, item.email].filter(Boolean).join(" · ") ||
+                      "Sem dados de contato"}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!canEdit}
+                    onClick={() => startEdit(item)}
+                  >
+                    <Pencil className="size-4 mr-2" /> Editar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!canEdit}
+                    onClick={() => toggle.mutate(item)}
+                  >
+                    {item.ativo ? "Desativar" : "Ativar"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!canEdit}
+                    onClick={() => {
+                      if (confirm(`Excluir ${item.nome}?`)) remove.mutate(item.id);
+                    }}
+                  >
+                    <Trash2 className="size-4 mr-2 text-destructive" /> Excluir
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Nenhuma indicação cadastrada.
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
