@@ -253,7 +253,6 @@ function ProcessosPage() {
                 "Honorários em %",
                 "Honorarios em %",
               ],
-              sucumbencias_valor: ["Sucumbências", "Sucumbencias"],
               resultado: ["Resultado"],
               link_processo: ["Link do Processo"],
               link_pasta: [
@@ -271,7 +270,6 @@ function ProcessosPage() {
               valor_acordo: "number",
               honorarios_valor: "number",
               honorarios_percentual: "number",
-              sucumbencias_valor: "number",
             }}
             onImport={async (r) => {
               if (!r.autor && !r.reu) throw new Error("Linha sem Autor nem Réu");
@@ -695,12 +693,8 @@ function ProcessoForm({
   const sucumbenciasPercentualValor =
     (baseCalculo * percentual(form.sucumbencias_percentual)) / 100;
   const honorariosContratuais = Number(form.honorarios_valor ?? 0) || 0;
-  const sucumbenciasEmReais = Number(form.sucumbencias_valor ?? 0) || 0;
   const totalHonorarios =
-    honorariosContratuais +
-    honorariosPercentualValor +
-    sucumbenciasEmReais +
-    sucumbenciasPercentualValor;
+    honorariosContratuais + honorariosPercentualValor + sucumbenciasPercentualValor;
   return (
     <form
       className="space-y-4"
@@ -1062,15 +1056,7 @@ function ProcessoForm({
                 {formatBRL(sucumbenciasPercentualValor)} em sucumbências.
               </p>
             </div>
-            <div className="lg:col-span-3">
-              <Label>Sucumbências em R$</Label>
-              <CurrencyInput
-                value={form.sucumbencias_valor}
-                onValueChange={(value) => set("sucumbencias_valor", value)}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Valor fixo de sucumbências.</p>
-            </div>
-            <div className="sm:col-span-2 lg:col-span-3">
+            <div className="sm:col-span-2 lg:col-span-6">
               <Label>Valor da Causa (R$)</Label>
               <CurrencyInput
                 value={form.valor_causa}
@@ -1078,8 +1064,7 @@ function ProcessoForm({
               />
               <p className="mt-2 text-xs text-muted-foreground">
                 Contratuais {formatBRL(honorariosContratuais)} + percentuais{" "}
-                {formatBRL(honorariosPercentualValor)} + sucumbências em R${" "}
-                {formatBRL(sucumbenciasEmReais)} + sucumbências percentuais{" "}
+                {formatBRL(honorariosPercentualValor)} + sucumbências percentuais{" "}
                 {formatBRL(sucumbenciasPercentualValor)}. Os percentuais usam o valor de
                 acordo/sentença como base de cálculo.
               </p>
