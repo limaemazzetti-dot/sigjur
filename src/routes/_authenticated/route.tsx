@@ -88,7 +88,7 @@ function AuthenticatedLayout() {
         <AppSidebar />
         <div className="flex-1 min-h-0 flex flex-col min-w-0 overflow-hidden">
           <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 dark">
-            <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between">
+            <div className="sigjur-shell-width h-full flex items-center justify-between">
               <SidebarTrigger className="lg:hidden text-sidebar-foreground" />
               <div className="hidden lg:block min-w-0" />
 
@@ -108,7 +108,7 @@ function AuthenticatedLayout() {
               className="animate-fade-in h-full w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-contain rounded-xl border border-border/60 bg-background shadow-sm [scrollbar-gutter:stable]"
             >
               <div
-                className="h-full w-full"
+                className="h-full min-w-0 w-full"
                 onClickCapture={handleReadOnlyClick}
                 onSubmitCapture={handleReadOnlySubmit}
               >

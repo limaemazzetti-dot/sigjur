@@ -156,7 +156,7 @@ function DashboardPage() {
   }, [recent.data, inicioISO, fimISO]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto w-full">
+    <div className="sigjur-page space-y-8">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Painel</p>

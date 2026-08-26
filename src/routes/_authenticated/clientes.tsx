@@ -138,7 +138,7 @@ function ClientesPage() {
   }
 
   return (
-    <div className="h-full min-h-0 p-4 pb-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0 flex flex-col gap-6 max-w-[1600px] mx-auto w-full overflow-hidden">
+    <div className="sigjur-page sigjur-page--flush-bottom h-full min-h-0 flex flex-col gap-6 overflow-hidden">
       <header className="shrink-0 grid grid-cols-[minmax(0,1fr)] items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0">
           <h1 className="font-serif text-3xl">Clientes</h1>

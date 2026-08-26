@@ -67,7 +67,7 @@ function ResumoPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto w-full">
+    <div className="sigjur-page space-y-6">
       {/* Header em preto neutro + linha dourada */}
       <div className="rounded-2xl bg-sidebar text-sidebar-foreground px-4 py-4 sm:px-5 grid grid-cols-[minmax(0,1fr)] gap-4 border border-sidebar-border md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div className="flex min-w-0 items-center gap-3">

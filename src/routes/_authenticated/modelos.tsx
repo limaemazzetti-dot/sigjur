@@ -112,7 +112,7 @@ function ModelosPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto w-full">
+    <div className="sigjur-page space-y-6">
       <header className="grid grid-cols-[minmax(0,1fr)] items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Documentos</p>

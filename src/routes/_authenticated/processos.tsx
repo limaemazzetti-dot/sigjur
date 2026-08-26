@@ -361,7 +361,7 @@ function ProcessosPage() {
   }
 
   return (
-    <div className="h-full min-h-0 p-4 pb-0 sm:p-6 sm:pb-0 xl:px-6 xl:pb-0 2xl:px-8 2xl:pb-0 flex flex-col gap-6 max-w-none mx-auto w-full min-w-0 overflow-x-hidden">
+    <div className="sigjur-page sigjur-page--flush-bottom h-full min-h-0 flex flex-col gap-6 overflow-x-hidden">
       <header className="shrink-0 grid grid-cols-[minmax(0,1fr)] items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Jurídico</p>

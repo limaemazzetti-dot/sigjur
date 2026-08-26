@@ -9,6 +9,33 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Estrutura compartilhada das áreas autenticadas. A mesma régua é usada pela
+   barra superior e por cada aba, para aproveitar o monitor sem criar largura
+   excedente, margens divergentes ou rolagem horizontal. */
+.sigjur-shell-width,
+.sigjur-page {
+  width: min(100%, 1920px);
+  min-width: 0;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 2vw, 2rem);
+}
+
+.sigjur-page {
+  padding-block: clamp(1rem, 2vw, 2rem);
+}
+
+/* Telas com listas usam toda a altura e deixam a rolagem no conteúdo da aba. */
+.sigjur-page.sigjur-page--flush-bottom {
+  padding-block-end: 0;
+}
+
+@media (max-width: 639px) {
+  .sigjur-shell-width,
+  .sigjur-page {
+    padding-inline: 1rem;
+  }
+}
+
 table[data-column-resizable="true"] thead th {
   position: relative;
 }
