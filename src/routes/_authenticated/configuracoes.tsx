@@ -100,8 +100,9 @@ export function CadastrosPage() {
         cadastrados.
       </p>
 
-      <Tabs defaultValue="tipo_acao" className="w-full">
+      <Tabs defaultValue="indicacoes" className="w-full">
         <TabsList className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 w-full h-auto">
+          <TabsTrigger value="indicacoes">Indicações</TabsTrigger>
           {CATEGORIAS.map((c) => (
             <TabsTrigger key={c} value={c}>
               {CATEGORIA_LABEL[c]}
@@ -109,8 +110,11 @@ export function CadastrosPage() {
           ))}
           <TabsTrigger value="vinculos">Vínculos</TabsTrigger>
           <TabsTrigger value="status">Status</TabsTrigger>
-          <TabsTrigger value="indicacoes">Indicações</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="indicacoes" className="pt-4">
+          <IndicacoesManager canEdit={canEdit} />
+        </TabsContent>
 
         {CATEGORIAS.map((c) => (
           <TabsContent key={c} value={c} className="pt-4">
@@ -123,9 +127,6 @@ export function CadastrosPage() {
         </TabsContent>
         <TabsContent value="status" className="pt-4">
           <StatusManager canEdit={canEdit} />
-        </TabsContent>
-        <TabsContent value="indicacoes" className="pt-4">
-          <IndicacoesManager canEdit={canEdit} />
         </TabsContent>
       </Tabs>
     </div>
