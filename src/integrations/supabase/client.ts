@@ -2,6 +2,18 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
+type PublicSupabaseConfig = {
+  url?: string;
+  publishableKey?: string;
+};
+
+function runtimePublicConfig(): PublicSupabaseConfig {
+  if (typeof window === "undefined") return {};
+  return (
+    (window as Window & { __SIGJUR_SUPABASE__?: PublicSupabaseConfig }).__SIGJUR_SUPABASE__ ?? {}
+  );
+}
+
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
 }
@@ -30,11 +42,15 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createSupabaseClient() {
+  const runtimeConfig = runtimePublicConfig();
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const SUPABASE_URL =
+    import.meta.env.VITE_SUPABASE_URL || runtimeConfig.url || process.env.SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    runtimeConfig.publishableKey ||
+    process.env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [

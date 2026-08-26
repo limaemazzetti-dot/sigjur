@@ -114,12 +114,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // A chave publishable é própria para o navegador. Ela é injetada pelo Worker
+  // em tempo de execução, evitando que um build sem variáveis públicas quebre
+  // o login. A service role nunca é enviada ao cliente.
+  const publicSupabaseConfig = JSON.stringify({
+    url: process.env.SUPABASE_URL,
+    publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
+  }).replace(/</g, "\\u003c");
   return (
     <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__SIGJUR_SUPABASE__=${publicSupabaseConfig};`,
+          }}
+        />
         {children}
         <Scripts />
       </body>
