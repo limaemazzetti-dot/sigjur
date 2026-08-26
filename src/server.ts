@@ -49,12 +49,15 @@ export default {
     try {
       const url = new URL(request.url);
       if (url.pathname === "/api/public-supabase-config") {
-        const bindings = env as Record<string, unknown>;
-        const url = typeof bindings.SUPABASE_URL === "string" ? bindings.SUPABASE_URL : undefined;
+        const bindings = (env ?? {}) as Record<string, unknown>;
+        const url =
+          typeof bindings.SUPABASE_URL === "string"
+            ? bindings.SUPABASE_URL
+            : process.env.SUPABASE_URL;
         const publishableKey =
           typeof bindings.SUPABASE_PUBLISHABLE_KEY === "string"
             ? bindings.SUPABASE_PUBLISHABLE_KEY
-            : undefined;
+            : process.env.SUPABASE_PUBLISHABLE_KEY;
         if (!url || !publishableKey) {
           return new Response(JSON.stringify({ error: "Configuração indisponível" }), {
             status: 503,
