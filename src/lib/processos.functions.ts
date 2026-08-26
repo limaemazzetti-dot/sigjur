@@ -60,6 +60,7 @@ const ProcessoInput = z.object({
   honorarios_percentual: z.number().nullable().optional(),
   sucumbencias_percentual: z.number().nullable().optional(),
   cliente_id: z.string().uuid().nullable().optional(),
+  representante_id: z.string().uuid().nullable().optional(),
   cliente_qualificacao: z.string().nullable().optional(),
   outro_envolvido: z.string().nullable().optional(),
   outro_envolvido_cliente_id: z.string().uuid().nullable().optional(),
@@ -103,6 +104,7 @@ export type ProcessoRow = {
   honorarios_percentual: number | null;
   sucumbencias_percentual: number | null;
   cliente_id: string | null;
+  representante_id: string | null;
   cliente_qualificacao: string | null;
   outro_envolvido: string | null;
   outro_envolvido_cliente_id: string | null;
@@ -567,6 +569,7 @@ export const upsertProcesso = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = {
       ...data,
       cliente_id: clienteId,
+      representante_id: data.representante_id || null,
       data_protocolo: data.data_protocolo || null,
       data_encerramento: data.data_encerramento || null,
       data_inicio: data.data_inicio || (data.id ? null : new Date().toISOString().slice(0, 10)),

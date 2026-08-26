@@ -720,8 +720,9 @@ function VinculosManager({ canEdit }: { canEdit: boolean }) {
     <Card>
       <CardContent className="p-5 space-y-4">
         <p className="text-sm text-muted-foreground">
-          Vincule clientes uns aos outros (ex.: mãe vinculada ao menor). O "outro envolvido" no
-          processo será filtrado por esses vínculos com base no cliente principal do processo.
+          Vincule clientes uns aos outros (ex.: mãe vinculada ao menor). No Processo, esses vínculos
+          sugerem o representante correto, mas você também pode selecionar qualquer cliente
+          cadastrado como representante.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">

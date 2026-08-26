@@ -811,6 +811,7 @@ function ProcessoForm({
     honorarios_percentual: initial?.honorarios_percentual ?? null,
     sucumbencias_percentual: initial?.sucumbencias_percentual ?? null,
     cliente_id: initial?.cliente_id ?? null,
+    representante_id: initial?.representante_id ?? null,
     cliente_qualificacao: initial?.cliente_qualificacao ?? "",
     outro_envolvido: initial?.outro_envolvido ?? "",
     outro_envolvido_cliente_id: initial?.outro_envolvido_cliente_id ?? null,
@@ -863,10 +864,10 @@ function ProcessoForm({
     if (!clienteAutor || vinculos.data?.length !== 1) return;
     const vinculo = vinculos.data[0];
     setForm((atual) => {
-      if (atual.cliente_id && atual.cliente_id !== clienteAutor.id) return atual;
+      if (atual.representante_id) return atual;
       return {
         ...atual,
-        cliente_id: vinculo.cliente_vinculado_id,
+        representante_id: vinculo.cliente_vinculado_id,
         cliente_qualificacao:
           atual.cliente_qualificacao?.trim() || vinculo.parentesco || "Representante legal",
       };
@@ -875,14 +876,14 @@ function ProcessoForm({
   function set<K extends keyof ProcessoFormInput>(k: K, v: ProcessoFormInput[K]) {
     setForm((f) => ({ ...f, [k]: v }));
   }
-  const clienteSelecionado = clientes.find((cliente) => cliente.id === form.cliente_id);
-  const enderecoCliente = clienteSelecionado
+  const representanteSelecionado = clientes.find((cliente) => cliente.id === form.representante_id);
+  const enderecoRepresentante = representanteSelecionado
     ? [
-        clienteSelecionado.endereco,
-        clienteSelecionado.bairro,
-        clienteSelecionado.cidade,
-        clienteSelecionado.estado,
-        clienteSelecionado.cep ? `CEP ${clienteSelecionado.cep}` : null,
+        representanteSelecionado.endereco,
+        representanteSelecionado.bairro,
+        representanteSelecionado.cidade,
+        representanteSelecionado.estado,
+        representanteSelecionado.cep ? `CEP ${representanteSelecionado.cep}` : null,
       ]
         .filter(Boolean)
         .join(" · ")
@@ -1012,7 +1013,7 @@ function ProcessoForm({
               <div>
                 <Label>Nome</Label>
                 <SearchableClientPicker
-                  value={form.cliente_id ?? "__none__"}
+                  value={form.representante_id ?? "__none__"}
                   clients={clientes}
                   excludeIds={clienteAutor ? [clienteAutor.id] : []}
                   placeholder="Busque pelo nome do representante"
@@ -1025,7 +1026,7 @@ function ProcessoForm({
                     );
                     setForm((atual) => ({
                       ...atual,
-                      cliente_id: clienteId,
+                      representante_id: clienteId,
                       cliente_qualificacao:
                         clienteId === null
                           ? ""
@@ -1054,21 +1055,27 @@ function ProcessoForm({
                   .join(", ")}
               </p>
             )}
-            {clienteSelecionado && (
+            {representanteSelecionado && (
               <div className="rounded-md bg-secondary/45 px-3 py-2 text-xs text-muted-foreground">
                 <p className="font-medium text-foreground">
                   Dados do representante carregados do cadastro
                 </p>
                 <p className="mt-1">
                   {[
-                    clienteSelecionado.cpf_cnpj ? `CPF/CNPJ: ${clienteSelecionado.cpf_cnpj}` : null,
-                    clienteSelecionado.telefone ? `Telefone: ${clienteSelecionado.telefone}` : null,
-                    clienteSelecionado.email ? `E-mail: ${clienteSelecionado.email}` : null,
+                    representanteSelecionado.cpf_cnpj
+                      ? `CPF/CNPJ: ${representanteSelecionado.cpf_cnpj}`
+                      : null,
+                    representanteSelecionado.telefone
+                      ? `Telefone: ${representanteSelecionado.telefone}`
+                      : null,
+                    representanteSelecionado.email
+                      ? `E-mail: ${representanteSelecionado.email}`
+                      : null,
                   ]
                     .filter(Boolean)
                     .join(" · ") || "Documento e contato ainda não informados."}
                 </p>
-                {enderecoCliente && <p className="mt-1">{enderecoCliente}</p>}
+                {enderecoRepresentante && <p className="mt-1">{enderecoRepresentante}</p>}
               </div>
             )}
           </div>
