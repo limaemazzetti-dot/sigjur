@@ -756,6 +756,7 @@ function ProcessoForm({
                 onValueChange={(v) => set("tipo_acao", v)}
                 options={catTipos.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione o tipo de ação"
+                allowCustom={false}
               />
             </div>
             <div>
@@ -765,6 +766,7 @@ function ProcessoForm({
                 onValueChange={(v) => set("materia", v)}
                 options={catMaterias.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione a matéria"
+                allowCustom={false}
               />
             </div>
           </div>
@@ -887,6 +889,7 @@ function ProcessoForm({
                 onValueChange={(v) => set("advogado", v)}
                 options={catAdvogados.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione o advogado"
+                allowCustom={false}
               />
             </div>
             <div>
@@ -905,6 +908,7 @@ function ProcessoForm({
                 onValueChange={(v) => set("fase", v)}
                 options={catFases.data?.map((o) => o.valor) ?? []}
                 placeholder="Selecione a fase"
+                allowCustom={false}
               />
             </div>
           </div>

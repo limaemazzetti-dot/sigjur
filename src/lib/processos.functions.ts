@@ -385,8 +385,23 @@ export const upsertProcesso = createServerFn({ method: "POST" })
     for (const option of (catalogRows ?? []) as Array<{ categoria: string; valor: string }>) {
       catalogo.set(`${option.categoria}:${normalizeCatalogValue(option.valor)}`, option.valor);
     }
-    const canonical = (categoria: string, value: string | null | undefined) =>
-      value ? (catalogo.get(`${categoria}:${normalizeCatalogValue(value)}`) ?? value) : value;
+    const catalogoLabel: Record<string, string> = {
+      tipo_acao: "tipo de ação",
+      materia: "matéria",
+      fase: "fase",
+      advogado: "advogado",
+    };
+    const canonical = (categoria: keyof typeof catalogoLabel, value: string | null | undefined) => {
+      const valor = value?.trim();
+      if (!valor) return value;
+      const opcao = catalogo.get(`${categoria}:${normalizeCatalogValue(valor)}`);
+      if (!opcao) {
+        throw new Error(
+          `Selecione um(a) ${catalogoLabel[categoria]} ativo(a) em Cadastros antes de salvar o processo.`,
+        );
+      }
+      return opcao;
+    };
     data = {
       ...data,
       tipo_acao: canonical("tipo_acao", data.tipo_acao),
