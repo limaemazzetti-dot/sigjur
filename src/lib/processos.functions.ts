@@ -509,12 +509,21 @@ export const upsertProcesso = createServerFn({ method: "POST" })
       }
       return opcao;
     };
+    const canonicalAdvogados = (value: string | null | undefined) => {
+      const valores = (value ?? "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (valores.length === 0) return null;
+      const normalizados = valores.map((valor) => canonical("advogado", valor));
+      return [...new Set(normalizados)].join(", ");
+    };
     data = {
       ...data,
       tipo_acao: canonical("tipo_acao", data.tipo_acao),
       materia: canonical("materia", data.materia),
       fase: canonical("fase", data.fase),
-      advogado: canonical("advogado", data.advogado),
+      advogado: canonicalAdvogados(data.advogado),
     };
     if (data.numero_cnj?.trim()) {
       const normalized = data.numero_cnj.replace(/\D/g, "");

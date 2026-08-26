@@ -58,6 +58,8 @@ import { CatalogoCombobox } from "@/components/catalogo-combobox";
 import { SearchableClientPicker } from "@/components/searchable-client-picker";
 import { CurrencyInput } from "@/components/currency-input";
 import { PercentageInput } from "@/components/percentage-input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { listStatusProcesso } from "@/lib/status-processo.functions";
 import { listIndicacoes, type IndicacaoRow } from "@/lib/indicacoes.functions";
 
@@ -69,6 +71,72 @@ function ProcessosRoute() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isProcessoDetalhe = /^\/processos\/[^/]+\/?$/.test(pathname);
   return isProcessoDetalhe ? <Outlet /> : <ProcessosPage />;
+}
+
+function splitAdvogados(value: string | null | undefined) {
+  return (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function AdvogadosMultiSelect({
+  value,
+  options,
+  onValueChange,
+}: {
+  value: string | null | undefined;
+  options: string[];
+  onValueChange: (value: string) => void;
+}) {
+  const selecionados = splitAdvogados(value);
+  const alterarSelecao = (advogado: string, marcado: boolean) => {
+    const proximos = marcado
+      ? [...new Set([...selecionados, advogado])]
+      : selecionados.filter((item) => item !== advogado);
+    onValueChange(proximos.join(", "));
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          className="h-10 w-full justify-start text-left font-normal"
+        >
+          <span className="truncate">
+            {selecionados.length ? selecionados.join(", ") : "Selecione um ou mais advogados"}
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-2">
+        <div className="max-h-56 space-y-1 overflow-y-auto">
+          {options.map((advogado) => {
+            const marcado = selecionados.includes(advogado);
+            return (
+              <label
+                key={advogado}
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm hover:bg-accent"
+              >
+                <Checkbox
+                  checked={marcado}
+                  onCheckedChange={(checked) => alterarSelecao(advogado, checked === true)}
+                />
+                <span>{advogado}</span>
+              </label>
+            );
+          })}
+          {options.length === 0 && (
+            <p className="px-2 py-3 text-sm text-muted-foreground">
+              Cadastre advogados ativos em Cadastros primeiro.
+            </p>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function ProcessosPage() {
@@ -1007,13 +1075,11 @@ function ProcessoForm({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
             <div>
-              <Label>Advogado</Label>
-              <CatalogoCombobox
+              <Label>Advogado(s)</Label>
+              <AdvogadosMultiSelect
                 value={form.advogado ?? ""}
                 onValueChange={(v) => set("advogado", v)}
                 options={catAdvogados.data?.map((o) => o.valor) ?? []}
-                placeholder="Selecione o advogado"
-                allowCustom={false}
               />
             </div>
             <div>
