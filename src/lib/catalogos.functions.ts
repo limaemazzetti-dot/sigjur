@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireEditorAccess } from "@/integrations/supabase/access-middleware";
 
-export const CATEGORIAS = ["tipo_acao", "materia", "fase", "advogado"] as const;
+export const CATEGORIAS = ["tipo_acao", "materia", "fase", "advogado", "origem"] as const;
 export type Categoria = (typeof CATEGORIAS)[number];
 
 export const CATEGORIA_LABEL: Record<Categoria, string> = {
@@ -11,6 +11,7 @@ export const CATEGORIA_LABEL: Record<Categoria, string> = {
   materia: "Matéria",
   fase: "Fase",
   advogado: "Advogado",
+  origem: "Origem",
 };
 
 export type CatalogoOpcao = {
@@ -88,6 +89,7 @@ export const upsertCatalogo = createServerFn({ method: "POST" })
         materia: "materia",
         fase: "fase",
         advogado: "advogado",
+        origem: "origem",
       };
       if (oldValue && oldValue !== data.valor && oldCategory === data.categoria) {
         const { error: processError } = await context.supabase
@@ -131,7 +133,7 @@ export const importCatalogoFromProcessos = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data: processos, error } = await context.supabase
       .from("processos" as never)
-      .select("tipo_acao, materia, fase, advogado");
+      .select("tipo_acao, materia, fase, advogado, origem");
     if (error) throw new Error(error.message);
 
     const rows: Array<{ categoria: Categoria; valor: string; ativo: boolean }> = [];

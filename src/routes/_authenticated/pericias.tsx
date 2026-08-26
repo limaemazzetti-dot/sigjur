@@ -47,6 +47,13 @@ const STATUS_LABEL = {
   cancelado: "Cancelada",
 } as const;
 
+const TIPOS_PERICIA = [
+  "Perícia médica judicial",
+  "Perícia médica administrativa",
+  "Perícia social judicial",
+  "Perícia social administrativa",
+] as const;
+
 function formatDateBR(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR");
 }
@@ -170,7 +177,7 @@ function PericiasPage() {
             <div className="p-6 text-sm text-muted-foreground">
               Nenhuma perícia encontrada. Clique em <strong>Nova perícia</strong> ou cadastre em{" "}
               <Link to="/prazos" className="underline underline-offset-2">
-                Prazos
+                Agenda
               </Link>{" "}
               incluindo a palavra "perícia" no título ou descrição.
             </div>
@@ -305,7 +312,12 @@ function PericiaDialog({
 
   useEffect(() => {
     if (open) {
-      setTitulo(editing?.titulo ?? "");
+      const tituloExistente = editing?.titulo ?? "";
+      setTitulo(
+        TIPOS_PERICIA.find((tipo) =>
+          tituloExistente.toLocaleLowerCase("pt-BR").includes(tipo.toLocaleLowerCase("pt-BR")),
+        ) ?? TIPOS_PERICIA[0],
+      );
       setDescricao(cleanDescricao(editing?.descricao));
       setData(editing?.data_prazo ?? new Date().toISOString().slice(0, 10));
       setHorario(readHorario(editing?.descricao));
@@ -339,13 +351,11 @@ function PericiaDialog({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const t = titulo.trim();
-    if (!t) return toast.error("Informe o título");
     if (!processoId) return toast.error("Selecione o processo vinculado");
-    const tituloFinal = /per[íi]cia/i.test(t) ? t : `Perícia — ${t}`;
     mut.mutate({
       id: editing?.id,
       processo_id: processoId,
-      titulo: tituloFinal,
+      titulo: t,
       descricao:
         [horario ? `[Horário: ${horario}]` : "", descricao.trim()].filter(Boolean).join(" ") ||
         null,
@@ -366,12 +376,19 @@ function PericiaDialog({
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <Label className="text-xs">Título</Label>
-            <Input
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ex.: Perícia médica"
-            />
+            <Label className="text-xs">Tipo de perícia</Label>
+            <Select value={titulo} onValueChange={setTitulo}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIPOS_PERICIA.map((tipo) => (
+                  <SelectItem key={tipo} value={tipo}>
+                    {tipo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="text-xs">Processo vinculado</Label>

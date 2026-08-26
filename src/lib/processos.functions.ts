@@ -35,6 +35,8 @@ const ProcessoInput = z.object({
   pasta: z.string().nullable().optional(),
   autor: z.string().min(1),
   reu: z.string().min(1),
+  autores: z.array(z.string().trim().min(1).max(240)).min(1).optional(),
+  reus: z.array(z.string().trim().min(1).max(240)).min(1).optional(),
   status: z.string().trim().min(1).max(80).default("inicial"),
   materia: z.string().nullable().optional(),
   tipo_acao: z.string().nullable().optional(),
@@ -79,6 +81,8 @@ export type ProcessoRow = {
   pasta: string | null;
   autor: string;
   reu: string;
+  autores?: string[];
+  reus?: string[];
   status: string;
   materia: string | null;
   tipo_acao: string | null;
@@ -196,6 +200,7 @@ export const listProcessos = createServerFn({ method: "POST" })
         reu: z.string().optional(),
         numero_cnj: z.string().optional(),
         area: z.string().optional(),
+        advogado: z.string().optional(),
         indicacao_id: z.string().uuid().optional(),
         data_inicio_de: z.string().date().optional(),
         data_inicio_ate: z.string().date().optional(),
@@ -217,6 +222,7 @@ export const listProcessos = createServerFn({ method: "POST" })
     if (data.materia) q = q.eq("materia", data.materia);
     if (data.cliente_id) q = q.eq("cliente_id", data.cliente_id);
     if (data.tipo_acao) q = q.eq("tipo_acao", data.tipo_acao);
+    if (data.advogado) q = q.ilike("advogado", `%${data.advogado}%`);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     const baseProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
@@ -309,6 +315,7 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
         reu: z.string().optional(),
         numero_cnj: z.string().optional(),
         area: z.string().optional(),
+        advogado: z.string().optional(),
         indicacao_id: z.string().uuid().optional(),
         data_inicio_de: z.string().date().optional(),
         data_inicio_ate: z.string().date().optional(),
@@ -329,6 +336,7 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
     if (data.status) q = q.eq("status", data.status);
     if (data.tipo_acao) q = q.eq("tipo_acao", data.tipo_acao);
     if (data.indicacao_id) q = q.eq("indicacao_id", data.indicacao_id);
+    if (data.advogado) q = q.ilike("advogado", `%${data.advogado}%`);
     if (data.data_inicio_de) q = q.gte("data_inicio", data.data_inicio_de);
     if (data.data_inicio_ate) q = q.lte("data_inicio", data.data_inicio_ate);
     const { data: rows, error } = await q;
@@ -499,6 +507,7 @@ export const upsertProcesso = createServerFn({ method: "POST" })
       materia: "matéria",
       fase: "fase",
       advogado: "advogado",
+      origem: "origem",
     };
     const canonical = (categoria: keyof typeof catalogoLabel, value: string | null | undefined) => {
       const valor = value?.trim();
@@ -526,6 +535,7 @@ export const upsertProcesso = createServerFn({ method: "POST" })
       materia: canonical("materia", data.materia),
       fase: canonical("fase", data.fase),
       advogado: canonicalAdvogados(data.advogado),
+      origem: canonical("origem", data.origem),
     };
     if (data.numero_cnj?.trim()) {
       const normalized = data.numero_cnj.replace(/\D/g, "");
@@ -568,6 +578,10 @@ export const upsertProcesso = createServerFn({ method: "POST" })
     }
     const payload: Record<string, unknown> = {
       ...data,
+      autor: data.autores?.[0] ?? data.autor,
+      reu: data.reus?.[0] ?? data.reu,
+      autores: data.autores ?? [data.autor],
+      reus: data.reus ?? [data.reu],
       cliente_id: clienteId,
       representante_id: data.representante_id || null,
       data_protocolo: data.data_protocolo || null,

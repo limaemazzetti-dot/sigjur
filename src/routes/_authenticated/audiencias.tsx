@@ -135,7 +135,7 @@ function AudienciasPage() {
             <div className="p-6 text-sm text-muted-foreground">
               Nenhuma audiência encontrada. Clique em <strong>Nova audiência</strong> ou cadastre em{" "}
               <Link to="/prazos" className="underline underline-offset-2">
-                Prazos
+                Agenda
               </Link>{" "}
               incluindo a palavra "audiência" no título ou descrição.
             </div>

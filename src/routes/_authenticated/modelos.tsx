@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Copy } from "lucide-react";
+import { criarLinkPublicoContrato } from "@/lib/contratos-publicos.functions";
 
 export const Route = createFileRoute("/_authenticated/modelos")({
   component: ModelosPage,
@@ -98,6 +100,15 @@ function ModelosPage() {
       toast.success("Removido");
       qc.invalidateQueries({ queryKey: ["templates"] });
     },
+  });
+  const mCriarLink = useMutation({
+    mutationFn: () => criarLinkPublicoContrato({ data: {} }),
+    onSuccess: async ({ token, expira_em }) => {
+      const url = `${window.location.origin}/contrato/${token}`;
+      await navigator.clipboard.writeText(url);
+      toast.success(`Link copiado. Válido até ${new Date(expira_em).toLocaleDateString("pt-BR")}.`);
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   return (
@@ -174,6 +185,15 @@ function ModelosPage() {
                           }}
                         >
                           <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={mCriarLink.isPending}
+                          onClick={() => mCriarLink.mutate()}
+                        >
+                          <Copy className="mr-2 size-4" />{" "}
+                          {mCriarLink.isPending ? "Gerando…" : "Copiar link do contrato"}
                         </Button>
                         <Button
                           variant="ghost"

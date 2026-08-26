@@ -139,6 +139,53 @@ function AdvogadosMultiSelect({
   );
 }
 
+function PartesField({
+  label,
+  values,
+  onChange,
+}: {
+  label: string;
+  values: string[];
+  onChange: (values: string[]) => void;
+}) {
+  const atualizar = (index: number, value: string) =>
+    onChange(values.map((item, itemIndex) => (itemIndex === index ? value : item)));
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <Label>
+          {label}
+          {values.length > 1 ? "es" : ""}
+        </Label>
+        <Button type="button" variant="outline" size="sm" onClick={() => onChange([...values, ""])}>
+          <Plus className="mr-1 size-3.5" /> Adicionar
+        </Button>
+      </div>
+      {values.map((value, index) => (
+        <div key={`${label}-${index}`} className="flex gap-2">
+          <Input
+            required={index === 0}
+            value={value}
+            onChange={(event) => atualizar(index, event.target.value)}
+            placeholder={`${label} ${index + 1}`}
+          />
+          {values.length > 1 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={`Remover ${label.toLowerCase()}`}
+              onClick={() => onChange(values.filter((_, itemIndex) => itemIndex !== index))}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ProcessosPage() {
   const qc = useQueryClient();
   const autoSync = useAutoSync();
@@ -151,6 +198,7 @@ function ProcessosPage() {
   const [numeroFilter, setNumeroFilter] = useState("");
   const [areaFilter, setAreaFilter] = useState("");
   const [indicacaoFilter, setIndicacaoFilter] = useState("all");
+  const [advogadoFilter, setAdvogadoFilter] = useState("all");
   const [entradaDeFilter, setEntradaDeFilter] = useState("");
   const [entradaAteFilter, setEntradaAteFilter] = useState("");
   const [prazoFilter, setPrazoFilter] = useState("all");
@@ -171,6 +219,7 @@ function ProcessosPage() {
       numeroFilter,
       areaFilter,
       indicacaoFilter,
+      advogadoFilter,
       entradaDeFilter,
       entradaAteFilter,
       prazoFilter,
@@ -187,6 +236,7 @@ function ProcessosPage() {
           numero_cnj: numeroFilter || undefined,
           area: areaFilter || undefined,
           indicacao_id: indicacaoFilter !== "all" ? indicacaoFilter : undefined,
+          advogado: advogadoFilter !== "all" ? advogadoFilter : undefined,
           data_inicio_de: entradaDeFilter || undefined,
           data_inicio_ate: entradaAteFilter || undefined,
           prazo_em_aberto:
@@ -216,6 +266,11 @@ function ProcessosPage() {
   const indicacoes = useQuery({
     queryKey: ["indicacoes"],
     queryFn: () => listIndicacoes({ data: {} }),
+    staleTime: 60_000,
+  });
+  const advogados = useQuery({
+    queryKey: ["catalogo", "advogado"],
+    queryFn: () => listCatalogo({ data: { categoria: "advogado" } }),
     staleTime: 60_000,
   });
   const statusLabels = {
@@ -260,6 +315,7 @@ function ProcessosPage() {
         Área: p.area ?? p.materia ?? "",
         Responsável: p.clientes?.nome ?? "",
         Indicador: p.indicacoes?.nome ?? "",
+        Advogado: p.advogado ?? "",
         "Data de entrada": p.data_inicio
           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
           : "",
@@ -283,6 +339,7 @@ function ProcessosPage() {
         { header: "Área", dataKey: "area" },
         { header: "Data de entrada", dataKey: "entrada" },
         { header: "Indicador", dataKey: "indicacao" },
+        { header: "Advogado", dataKey: "advogado" },
       ],
       rows: list.data.map((p) => ({
         cnj: p.numero_cnj ?? "—",
@@ -531,6 +588,22 @@ function ProcessosPage() {
           </Select>
         </div>
         <div className="min-w-0">
+          <Label className="text-xs">Advogado</Label>
+          <Select value={advogadoFilter} onValueChange={setAdvogadoFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {(advogados.data ?? []).map(({ valor: advogado }) => (
+                <SelectItem key={advogado} value={advogado}>
+                  {advogado}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-0">
           <Label className="text-xs">Entrada a partir de</Label>
           <Input
             type="date"
@@ -559,6 +632,7 @@ function ProcessosPage() {
               setNumeroFilter("");
               setAreaFilter("");
               setIndicacaoFilter("all");
+              setAdvogadoFilter("all");
               setEntradaDeFilter("");
               setEntradaAteFilter("");
               setPrazoFilter("all");
@@ -579,15 +653,16 @@ function ProcessosPage() {
             <table className="w-full table-fixed text-sm border-collapse">
               <colgroup>
                 <col className="w-[3%]" />
-                <col className="w-[13%]" />
                 <col className="w-[12%]" />
+                <col className="w-[10%]" />
                 <col className="w-[8%]" />
-                <col className="w-[12%]" />
-                <col className="w-[12%]" />
+                <col className="w-[11%]" />
+                <col className="w-[10%]" />
                 <col className="w-[8%]" />
                 <col className="w-[9%]" />
                 <col className="w-[8%]" />
-                <col className="w-[15%]" />
+                <col className="w-[11%]" />
+                <col className="w-[10%]" />
               </colgroup>
               <thead className="text-black text-xs uppercase tracking-wide">
                 <tr>
@@ -620,6 +695,9 @@ function ProcessosPage() {
                   </th>
                   <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Indicador
+                  </th>
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                    Advogado
                   </th>
                 </tr>
               </thead>
@@ -684,6 +762,9 @@ function ProcessosPage() {
                       </td>
                       <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                         {p.indicacoes?.nome ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                        {p.advogado ?? "—"}
                       </td>
                     </tr>
                   );
@@ -786,6 +867,8 @@ function ProcessoForm({
     pasta: initial?.pasta ?? "",
     autor: initial?.autor ?? "",
     reu: initial?.reu ?? "",
+    autores: initial?.autores?.length ? initial.autores : [initial?.autor ?? ""],
+    reus: initial?.reus?.length ? initial.reus : [initial?.reu ?? ""],
     status: initial?.status ?? "inicial",
     materia: initial?.materia ?? "",
     tipo_acao: initial?.tipo_acao ?? "",
@@ -840,6 +923,11 @@ function ProcessoForm({
   const catAdvogados = useQuery({
     queryKey: ["catalogo", "advogado"],
     queryFn: () => listCatalogo({ data: { categoria: "advogado" } }),
+    staleTime: 60_000,
+  });
+  const catOrigens = useQuery({
+    queryKey: ["catalogo", "origem"],
+    queryFn: () => listCatalogo({ data: { categoria: "origem" } }),
     staleTime: 60_000,
   });
   const statusOpcoes = useQuery({
@@ -904,7 +992,13 @@ function ProcessoForm({
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        const autores = (form.autores ?? [form.autor]).map((item) => item.trim()).filter(Boolean);
+        const reus = (form.reus ?? [form.reu]).map((item) => item.trim()).filter(Boolean);
+        if (!autores.length || !reus.length) {
+          toast.error("Informe ao menos um autor e um réu.");
+          return;
+        }
+        onSubmit({ ...form, autor: autores[0], reu: reus[0], autores, reus });
       }}
     >
       <Tabs defaultValue="gerais" className="w-full">
@@ -970,14 +1064,18 @@ function ProcessoForm({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label>Autor</Label>
-              <Input required value={form.autor} onChange={(e) => set("autor", e.target.value)} />
-            </div>
-            <div>
-              <Label>Réu</Label>
-              <Input required value={form.reu} onChange={(e) => set("reu", e.target.value)} />
-            </div>
+            <PartesField
+              label="Autor"
+              values={form.autores ?? [form.autor]}
+              onChange={(autores) =>
+                setForm((current) => ({ ...current, autores, autor: autores[0] ?? "" }))
+              }
+            />
+            <PartesField
+              label="Réu"
+              values={form.reus ?? [form.reu]}
+              onChange={(reus) => setForm((current) => ({ ...current, reus, reu: reus[0] ?? "" }))}
+            />
           </div>
         </TabsContent>
 
@@ -1218,10 +1316,12 @@ function ProcessoForm({
             </div>
             <div>
               <Label>Origem / Observação da indicação</Label>
-              <Input
+              <CatalogoCombobox
                 value={form.origem ?? ""}
-                onChange={(e) => set("origem", e.target.value)}
-                placeholder="Ex.: indicação recebida pelo WhatsApp"
+                onValueChange={(value) => set("origem", value)}
+                options={catOrigens.data?.map((item) => item.valor) ?? []}
+                placeholder="Selecione a origem"
+                allowCustom={false}
               />
             </div>
           </div>
