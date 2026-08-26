@@ -396,31 +396,33 @@ function ProcessosPage() {
                 <col className="w-[11%]" />
                 <col className="w-[10%]" />
               </colgroup>
-              <thead className="sticky top-0 z-10 bg-gold-gradient text-black text-xs uppercase tracking-wide">
+              <thead className="text-black text-xs uppercase tracking-wide">
                 <tr>
-                  <th className="text-center px-1 py-3 font-semibold border border-black/20">#</th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-1 py-3 font-semibold border border-black/20">
+                    #
+                  </th>
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Autor / Responsável
                   </th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Réu
                   </th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Status
                   </th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Nº do Processo
                   </th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Tipo de Ação
                   </th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Área
                   </th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Data de entrada
                   </th>
-                  <th className="text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
                     Prazo em Aberto?
                   </th>
                 </tr>
