@@ -7,10 +7,31 @@ type PublicSupabaseConfig = {
   publishableKey?: string;
 };
 
+let fetchedRuntimeConfig: PublicSupabaseConfig | undefined;
+let runtimeConfigRequest: Promise<PublicSupabaseConfig> | undefined;
+
+export async function hydrateSupabasePublicConfig() {
+  if (fetchedRuntimeConfig?.url && fetchedRuntimeConfig.publishableKey) return fetchedRuntimeConfig;
+  if (!runtimeConfigRequest) {
+    runtimeConfigRequest = fetch("/api/public-supabase-config", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Não foi possível carregar a configuração de acesso.");
+        return (await response.json()) as PublicSupabaseConfig;
+      })
+      .then((config) => {
+        fetchedRuntimeConfig = config;
+        return config;
+      });
+  }
+  return runtimeConfigRequest;
+}
+
 function runtimePublicConfig(): PublicSupabaseConfig {
   if (typeof window === "undefined") return {};
   return (
-    (window as Window & { __SIGJUR_SUPABASE__?: PublicSupabaseConfig }).__SIGJUR_SUPABASE__ ?? {}
+    fetchedRuntimeConfig ??
+    (window as Window & { __SIGJUR_SUPABASE__?: PublicSupabaseConfig }).__SIGJUR_SUPABASE__ ??
+    {}
   );
 }
 

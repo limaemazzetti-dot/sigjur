@@ -47,6 +47,24 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/public-supabase-config") {
+        const bindings = env as Record<string, unknown>;
+        const url = typeof bindings.SUPABASE_URL === "string" ? bindings.SUPABASE_URL : undefined;
+        const publishableKey =
+          typeof bindings.SUPABASE_PUBLISHABLE_KEY === "string"
+            ? bindings.SUPABASE_PUBLISHABLE_KEY
+            : undefined;
+        if (!url || !publishableKey) {
+          return new Response(JSON.stringify({ error: "Configuração indisponível" }), {
+            status: 503,
+            headers: { "content-type": "application/json", "cache-control": "no-store" },
+          });
+        }
+        return new Response(JSON.stringify({ url, publishableKey }), {
+          headers: { "content-type": "application/json", "cache-control": "no-store" },
+        });
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
