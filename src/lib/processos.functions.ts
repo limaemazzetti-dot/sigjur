@@ -448,6 +448,35 @@ export const getProcesso = createServerFn({ method: "POST" })
       : null;
   });
 
+export const setProcessoIndicacao = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, requireEditorAccess])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        processo_id: z.string().uuid(),
+        indicacao_id: z.string().uuid().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (data.indicacao_id) {
+      const { data: indicador, error: indicadorError } = await context.supabase
+        .from("indicacoes" as never)
+        .select("id")
+        .eq("id", data.indicacao_id)
+        .eq("ativo", true)
+        .maybeSingle();
+      if (indicadorError) throw new Error(indicadorError.message);
+      if (!indicador) throw new Error("Selecione um indicador ativo cadastrado em Cadastros.");
+    }
+    const { error } = await context.supabase
+      .from("processos" as never)
+      .update({ indicacao_id: data.indicacao_id } as never)
+      .eq("id", data.processo_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const upsertProcesso = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, requireEditorAccess])
   .inputValidator((d: unknown) => ProcessoInput.parse(d))

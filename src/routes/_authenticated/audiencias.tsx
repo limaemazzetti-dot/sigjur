@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { listPrazos, upsertPrazo, type PrazoRow } from "@/lib/prazos.functions";
-import { listProcessos } from "@/lib/processos.functions";
+import { listProcessos, setProcessoIndicacao } from "@/lib/processos.functions";
+import { listIndicacoes } from "@/lib/indicacoes.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -259,6 +260,7 @@ function AudienciaDialog({
   const [horario, setHorario] = useState(readHorario(audiencia?.descricao));
   const [data, setData] = useState(audiencia?.data_prazo ?? new Date().toISOString().slice(0, 10));
   const [processoId, setProcessoId] = useState<string | null>(audiencia?.processo_id ?? null);
+  const [indicacaoId, setIndicacaoId] = useState<string | null>(null);
   const [status, setStatus] = useState<"aberto" | "cumprido" | "cancelado">(
     audiencia?.status ?? "aberto",
   );
@@ -275,6 +277,7 @@ function AudienciaDialog({
       setHorario(readHorario(audiencia?.descricao));
       setData(audiencia?.data_prazo ?? new Date().toISOString().slice(0, 10));
       setProcessoId(audiencia?.processo_id ?? null);
+      setIndicacaoId(null);
       setStatus(audiencia?.status ?? "aberto");
     }
   }, [open, audiencia]);
@@ -290,12 +293,29 @@ function AudienciaDialog({
     staleTime: 0,
     refetchOnMount: "always",
   });
+  const indicadoresQuery = useQuery({
+    queryKey: ["indicacoes"],
+    queryFn: () => listIndicacoes({ data: {} }),
+    enabled: open,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+
+  useEffect(() => {
+    if (!processoId) {
+      setIndicacaoId(null);
+      return;
+    }
+    const processo = processosQuery.data?.find((item) => item.id === processoId);
+    if (processo) setIndicacaoId(processo.indicacao_id ?? null);
+  }, [processoId, processosQuery.data]);
 
   const qc = useQueryClient();
   const upsertFn = useServerFn(upsertPrazo);
+  const setIndicacaoFn = useServerFn(setProcessoIndicacao);
   const mut = useMutation({
-    mutationFn: (finalTitle: string) =>
-      upsertFn({
+    mutationFn: async (finalTitle: string) => {
+      const result = await upsertFn({
         data: {
           id: audiencia?.id,
           processo_id: processoId,
@@ -306,10 +326,17 @@ function AudienciaDialog({
           status,
           tipo_evento: "audiencia",
         },
-      }),
+      });
+      await setIndicacaoFn({
+        data: { processo_id: processoId!, indicacao_id: indicacaoId },
+      });
+      return result;
+    },
     onSuccess: () => {
       toast.success(isEdit ? "Audiência atualizada" : "Audiência criada");
       qc.invalidateQueries({ queryKey: ["prazos"] });
+      qc.invalidateQueries({ queryKey: ["processos-lite"] });
+      qc.invalidateQueries({ queryKey: ["processos-resumo"] });
       closeDialog();
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),
@@ -367,6 +394,7 @@ function AudienciaDialog({
               onValueChange={(v) => {
                 setProcessoId(v || null);
                 const proc = processos.find((p) => p.id === v);
+                setIndicacaoId(proc?.indicacao_id ?? null);
                 if (proc && !titulo.trim()) setTitulo(`Audiência — ${processClientName(proc)}`);
               }}
               processes={processos}
@@ -384,6 +412,37 @@ function AudienciaDialog({
                   </p>
                 );
               })()}
+          </div>
+          <div>
+            <Label className="text-xs">Indicador do caso</Label>
+            <Select
+              value={indicacaoId ?? "__none__"}
+              onValueChange={(value) => setIndicacaoId(value === "__none__" ? null : value)}
+              disabled={!processoId || indicadoresQuery.isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    !processoId
+                      ? "Selecione primeiro o processo"
+                      : indicadoresQuery.isLoading
+                        ? "Carregando indicadores…"
+                        : "Sem indicador"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sem indicador</SelectItem>
+                {(indicadoresQuery.data ?? []).map((indicador) => (
+                  <SelectItem key={indicador.id} value={indicador.id}>
+                    {indicador.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              O nome será exibido na coluna Indicador do processo, após Prazo em aberto.
+            </p>
           </div>
           <div>
             <Label className="text-xs">Descrição</Label>
