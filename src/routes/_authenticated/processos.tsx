@@ -40,8 +40,6 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import type { CheckedState } from "@radix-ui/react-checkbox";
 import {
   Plus,
   FileSpreadsheet,
@@ -916,16 +914,11 @@ function ProcessoForm({
 
         <TabsContent value="partes-prazos" className="space-y-4 pt-4">
           <div className="rounded-md border border-border/60 p-3 space-y-3">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="prazo-aberto"
-                checked={!!form.prazo_em_aberto}
-                onCheckedChange={(c: CheckedState) => set("prazo_em_aberto", c === true)}
-              />
-              <Label htmlFor="prazo-aberto" className="cursor-pointer">
-                Prazo em aberto?
-              </Label>
-            </div>
+            <p className="text-sm font-medium">Prazo do processo</p>
+            <p className="text-xs text-muted-foreground">
+              Ao informar uma data, o processo será marcado automaticamente como tendo prazo em
+              aberto. Audiências e perícias pendentes também atualizam essa informação.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-3">
               <div>
                 <Label>Data do prazo</Label>

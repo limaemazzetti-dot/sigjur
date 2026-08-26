@@ -280,6 +280,13 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
         status: z.string().trim().min(1).max(80).optional(),
         q: z.string().optional(),
         tipo_acao: z.string().optional(),
+        autor: z.string().optional(),
+        reu: z.string().optional(),
+        numero_cnj: z.string().optional(),
+        area: z.string().optional(),
+        indicacao_id: z.string().uuid().optional(),
+        data_inicio_de: z.string().date().optional(),
+        data_inicio_ate: z.string().date().optional(),
         prazo_em_aberto: z.boolean().optional(),
         order: ProcessoOrder.default("cadastro_desc"),
       })
@@ -299,12 +306,32 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
     if (data.indicacao_id) q = q.eq("indicacao_id", data.indicacao_id);
     if (data.data_inicio_de) q = q.gte("data_inicio", data.data_inicio_de);
     if (data.data_inicio_ate) q = q.lte("data_inicio", data.data_inicio_ate);
-    if (data.prazo_em_aberto === true) q = q.eq("prazo_em_aberto", true);
-    if (data.prazo_em_aberto === false)
-      q = q.or("prazo_em_aberto.eq.false,prazo_em_aberto.is.null");
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const allProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
+    const baseProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
+    const idsComPrazo = baseProcessos.map((processo) => processo.id);
+    const { data: prazosAbertos, error: prazoError } = idsComPrazo.length
+      ? await context.supabase
+          .from("prazos" as never)
+          .select("processo_id")
+          .in("processo_id", idsComPrazo)
+          .eq("status", "aberto")
+      : { data: [], error: null };
+    if (prazoError) throw new Error(prazoError.message);
+    const processosComEventoAberto = new Set(
+      ((prazosAbertos ?? []) as Array<{ processo_id: string | null }>)
+        .map((prazo) => prazo.processo_id)
+        .filter((id): id is string => !!id),
+    );
+    const allProcessos = baseProcessos.map((processo) => ({
+      ...processo,
+      // A coluna deixa de depender da marcação manual: uma data de prazo no
+      // próprio processo ou qualquer evento aberto vinculado já exige atenção.
+      prazo_em_aberto:
+        !!processo.data_prazo ||
+        !!processo.prazo_em_aberto ||
+        processosComEventoAberto.has(processo.id),
+    }));
     const includesText = (value: string | null | undefined, filter: string | undefined) =>
       !filter || normalizeSearch(value ?? "").includes(normalizeSearch(filter));
     const processos = allProcessos.filter((p) => {
@@ -317,6 +344,8 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
         if (!(p.numero_cnj ?? "").replace(/\D/g, "").includes(wanted)) return false;
       }
       if (!includesText(p.area ?? p.materia, data.area)) return false;
+      if (data.prazo_em_aberto !== undefined && p.prazo_em_aberto !== data.prazo_em_aberto)
+        return false;
       return true;
     });
     if (processos.length === 0) return [] as ProcessoResumoRow[];
@@ -484,6 +513,7 @@ export const upsertProcesso = createServerFn({ method: "POST" })
       data_encerramento: data.data_encerramento || null,
       data_inicio: data.data_inicio || (data.id ? null : new Date().toISOString().slice(0, 10)),
       data_prazo: data.data_prazo || null,
+      prazo_em_aberto: !!data.data_prazo,
       criado_por: context.userId,
     };
     if (data.id) {
