@@ -107,37 +107,105 @@ function DrePage() {
   function handleExportExcel() {
     if (!dre.data) return;
     const rows: Record<string, unknown>[] = [];
-    rows.push({ Linha: "RECEITA BRUTA", Valor: dre.data.receitaBruta });
-    dre.data.receita.forEach((c) => rows.push({ Linha: "  " + c.nome, Valor: c.total }));
-    rows.push({ Linha: "(-) DEDUÇÕES", Valor: -dre.data.totalDeducoes });
-    dre.data.deducoes.forEach((c) => rows.push({ Linha: "  " + c.nome, Valor: -c.total }));
-    rows.push({ Linha: "(=) RECEITA LÍQUIDA", Valor: dre.data.receitaLiquida });
-    rows.push({ Linha: "(-) DESPESAS OPERACIONAIS", Valor: -dre.data.totalDespesas });
-    dre.data.despesas.forEach((c) => rows.push({ Linha: "  " + c.nome, Valor: -c.total }));
-    rows.push({ Linha: "(=) RESULTADO LÍQUIDO", Valor: dre.data.resultado });
-    exportToExcel(`dre-${inicioISO}_${fimISO}`, rows, "DRE");
+    rows.push({
+      Grupo: "RESUMO",
+      Descrição: "Total de entradas",
+      Tipo: "Entrada",
+      Valor: dre.data.totalEntradas,
+      __tone: "entrada",
+    });
+    rows.push({
+      Grupo: "RESUMO",
+      Descrição: "Total de saídas",
+      Tipo: "Saída",
+      Valor: dre.data.totalSaidas,
+      __tone: "saida",
+    });
+    rows.push({
+      Grupo: "RESUMO",
+      Descrição: "Saldo do período",
+      Tipo: "Saldo",
+      Valor: dre.data.totalEntradas - dre.data.totalSaidas,
+      __tone: "saldo",
+    });
+    rows.push({
+      Grupo: "ENTRADAS",
+      Descrição: "Receita bruta",
+      Tipo: "Entrada",
+      Valor: dre.data.receitaBruta,
+      __tone: "entrada",
+    });
+    dre.data.receita.forEach((c) =>
+      rows.push({
+        Grupo: "ENTRADAS",
+        Descrição: c.nome,
+        Tipo: "Entrada",
+        Valor: c.total,
+        __tone: "entrada",
+      }),
+    );
+    rows.push({
+      Grupo: "SAÍDAS",
+      Descrição: "Deduções",
+      Tipo: "Saída",
+      Valor: dre.data.totalDeducoes,
+      __tone: "saida",
+    });
+    dre.data.deducoes.forEach((c) =>
+      rows.push({
+        Grupo: "SAÍDAS",
+        Descrição: c.nome,
+        Tipo: "Saída",
+        Valor: c.total,
+        __tone: "saida",
+      }),
+    );
+    rows.push({
+      Grupo: "SAÍDAS",
+      Descrição: "Despesas operacionais",
+      Tipo: "Saída",
+      Valor: dre.data.totalDespesas,
+      __tone: "saida",
+    });
+    dre.data.despesas.forEach((c) =>
+      rows.push({
+        Grupo: "SAÍDAS",
+        Descrição: c.nome,
+        Tipo: "Saída",
+        Valor: c.total,
+        __tone: "saida",
+      }),
+    );
+    exportToExcel(`dre-${inicioISO}_${fimISO}`, rows, "DRE", { currencyColumns: ["Valor"] });
   }
 
   function handleExportPdf() {
     if (!dre.data) return;
-    const rows: { linha: string; valor: string }[] = [];
-    rows.push({ linha: "RECEITA BRUTA", valor: formatBRL(dre.data.receitaBruta) });
-    dre.data.receita.forEach((c) => rows.push({ linha: "  " + c.nome, valor: formatBRL(c.total) }));
-    rows.push({ linha: "(-) DEDUÇÕES", valor: formatBRL(dre.data.totalDeducoes) });
-    dre.data.deducoes.forEach((c) =>
-      rows.push({ linha: "  " + c.nome, valor: formatBRL(c.total) }),
+    const rows: Record<string, unknown>[] = [];
+    const addRow = (grupo: string, descricao: string, tipo: string, valor: number, tone: string) =>
+      rows.push({ grupo, descricao, tipo, valor: formatBRL(valor), __tone: tone });
+    addRow("RESUMO", "Total de entradas", "Entrada", dre.data.totalEntradas, "entrada");
+    addRow("RESUMO", "Total de saídas", "Saída", dre.data.totalSaidas, "saida");
+    addRow(
+      "RESUMO",
+      "Saldo do período",
+      "Saldo",
+      dre.data.totalEntradas - dre.data.totalSaidas,
+      "saldo",
     );
-    rows.push({ linha: "(=) RECEITA LÍQUIDA", valor: formatBRL(dre.data.receitaLiquida) });
-    rows.push({ linha: "(-) DESPESAS OPERACIONAIS", valor: formatBRL(dre.data.totalDespesas) });
-    dre.data.despesas.forEach((c) =>
-      rows.push({ linha: "  " + c.nome, valor: formatBRL(c.total) }),
-    );
-    rows.push({ linha: "(=) RESULTADO LÍQUIDO", valor: formatBRL(dre.data.resultado) });
+    addRow("ENTRADAS", "Receita bruta", "Entrada", dre.data.receitaBruta, "entrada");
+    dre.data.receita.forEach((c) => addRow("ENTRADAS", c.nome, "Entrada", c.total, "entrada"));
+    addRow("SAÍDAS", "Deduções", "Saída", dre.data.totalDeducoes, "saida");
+    dre.data.deducoes.forEach((c) => addRow("SAÍDAS", c.nome, "Saída", c.total, "saida"));
+    addRow("SAÍDAS", "Despesas operacionais", "Saída", dre.data.totalDespesas, "saida");
+    dre.data.despesas.forEach((c) => addRow("SAÍDAS", c.nome, "Saída", c.total, "saida"));
     exportToPdf({
       filename: `dre-${inicioISO}_${fimISO}`,
       titulo: `Demonstrativo de Resultado do Exercício — ${periodoLabel}`,
       columns: [
-        { header: "Descrição", dataKey: "linha" },
+        { header: "Grupo", dataKey: "grupo" },
+        { header: "Descrição", dataKey: "descricao" },
+        { header: "Tipo", dataKey: "tipo" },
         { header: "Valor", dataKey: "valor" },
       ],
       rows,

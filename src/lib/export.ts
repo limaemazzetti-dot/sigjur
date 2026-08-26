@@ -34,8 +34,27 @@ export function exportToExcel(
   filename: string,
   rows: Record<string, unknown>[],
   sheetName = "Dados",
+  options?: { currencyColumns?: string[] },
 ) {
-  const ws = XLSX.utils.json_to_sheet(rows);
+  const cleanRows = rows.map((row) =>
+    Object.fromEntries(Object.entries(row).filter(([key]) => !key.startsWith("__"))),
+  );
+  const ws = XLSX.utils.json_to_sheet(cleanRows);
+  const headers = Object.keys(cleanRows[0] ?? {});
+  const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1");
+  if (headers.length && range.e.r > 0) {
+    ws["!autofilter"] = { ref: XLSX.utils.encode_range(range) };
+    ws["!freeze"] = { xSplit: 0, ySplit: 1 };
+  }
+  ws["!cols"] = headers.map((header) => ({ wch: Math.max(14, Math.min(42, header.length + 10)) }));
+  for (const column of options?.currencyColumns ?? []) {
+    const columnIndex = headers.indexOf(column);
+    if (columnIndex < 0) continue;
+    for (let rowIndex = 1; rowIndex <= range.e.r; rowIndex++) {
+      const cell = ws[XLSX.utils.encode_cell({ c: columnIndex, r: rowIndex })];
+      if (cell && typeof cell.v === "number") cell.z = "R$ #,##0.00";
+    }
+  }
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
   XLSX.writeFile(wb, filename.endsWith(".xlsx") ? filename : filename + ".xlsx");
@@ -88,6 +107,22 @@ export async function exportToPdf(opts: {
     headStyles: { fillColor: [11, 11, 12], textColor: [228, 206, 154], lineColor: [200, 169, 106] },
     alternateRowStyles: { fillColor: [248, 246, 240] },
     margin: { left: 40, right: 40 },
+    didParseCell: (data) => {
+      if (data.section !== "body") return;
+      const tone = opts.rows[data.row.index]?.__tone;
+      if (tone === "entrada") {
+        data.cell.styles.fillColor = [236, 253, 245];
+        data.cell.styles.textColor = [6, 95, 70];
+      }
+      if (tone === "saida") {
+        data.cell.styles.fillColor = [255, 241, 242];
+        data.cell.styles.textColor = [159, 18, 57];
+      }
+      if (tone === "saldo") {
+        data.cell.styles.fillColor = [255, 251, 235];
+        data.cell.styles.fontStyle = "bold";
+      }
+    },
   });
 
   if (opts.footerNote) {
