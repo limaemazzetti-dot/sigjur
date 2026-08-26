@@ -690,6 +690,11 @@ function ProcessoForm({
     const numeric = Number(value ?? 0) || 0;
     return numeric > 0 && numeric <= 1 ? numeric * 100 : numeric;
   };
+  const parsePercentual = (value: string) => {
+    if (!value.trim()) return null;
+    const parsed = Number(value.replace(",", "."));
+    return Number.isFinite(parsed) ? parsed : null;
+  };
   const honorariosPercentualValor = (baseCalculo * percentual(form.honorarios_percentual)) / 100;
   const sucumbenciasPercentualValor =
     (baseCalculo * percentual(form.sucumbencias_percentual)) / 100;
@@ -1038,18 +1043,26 @@ function ProcessoForm({
               <Input
                 type="number"
                 step="0.01"
+                min="0"
                 value={form.honorarios_percentual ?? ""}
-                onChange={(e) => set("honorarios_percentual", num(e.target.value))}
+                onChange={(e) => set("honorarios_percentual", parsePercentual(e.target.value))}
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatBRL(honorariosPercentualValor)} em honorários.
+              </p>
             </div>
             <div>
               <Label>Sucumbências (%)</Label>
               <Input
                 type="number"
                 step="0.01"
+                min="0"
                 value={form.sucumbencias_percentual ?? ""}
-                onChange={(e) => set("sucumbencias_percentual", num(e.target.value))}
+                onChange={(e) => set("sucumbencias_percentual", parsePercentual(e.target.value))}
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatBRL(sucumbenciasPercentualValor)} em sucumbências.
+              </p>
             </div>
           </div>
           <div>
