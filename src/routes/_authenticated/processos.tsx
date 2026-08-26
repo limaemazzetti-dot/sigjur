@@ -1034,15 +1034,15 @@ function ProcessoForm({
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+            <div className="lg:col-span-2">
               <Label>Honorários contratuais (R$)</Label>
               <CurrencyInput
                 value={form.honorarios_valor}
                 onValueChange={(value) => set("honorarios_valor", value)}
               />
             </div>
-            <div>
+            <div className="lg:col-span-2">
               <Label>Honorários em %</Label>
               <PercentageInput
                 value={form.honorarios_percentual}
@@ -1052,7 +1052,7 @@ function ProcessoForm({
                 {formatBRL(honorariosPercentualValor)} em honorários.
               </p>
             </div>
-            <div>
+            <div className="lg:col-span-2">
               <Label>Sucumbências (%)</Label>
               <PercentageInput
                 value={form.sucumbencias_percentual}
@@ -1062,7 +1062,7 @@ function ProcessoForm({
                 {formatBRL(sucumbenciasPercentualValor)} em sucumbências.
               </p>
             </div>
-            <div>
+            <div className="lg:col-span-3">
               <Label>Sucumbências em R$</Label>
               <CurrencyInput
                 value={form.sucumbencias_valor}
@@ -1070,20 +1070,20 @@ function ProcessoForm({
               />
               <p className="mt-1 text-xs text-muted-foreground">Valor fixo de sucumbências.</p>
             </div>
-          </div>
-          <div>
-            <Label>Valor da Causa (R$)</Label>
-            <CurrencyInput
-              value={form.valor_causa}
-              onValueChange={(value) => set("valor_causa", value)}
-            />
-            <p className="mt-2 text-xs text-muted-foreground">
-              Contratuais {formatBRL(honorariosContratuais)} + percentuais{" "}
-              {formatBRL(honorariosPercentualValor)} + sucumbências em R${" "}
-              {formatBRL(sucumbenciasEmReais)} + sucumbências percentuais{" "}
-              {formatBRL(sucumbenciasPercentualValor)}. Os percentuais usam o valor de
-              acordo/sentença como base de cálculo.
-            </p>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <Label>Valor da Causa (R$)</Label>
+              <CurrencyInput
+                value={form.valor_causa}
+                onValueChange={(value) => set("valor_causa", value)}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Contratuais {formatBRL(honorariosContratuais)} + percentuais{" "}
+                {formatBRL(honorariosPercentualValor)} + sucumbências em R${" "}
+                {formatBRL(sucumbenciasEmReais)} + sucumbências percentuais{" "}
+                {formatBRL(sucumbenciasPercentualValor)}. Os percentuais usam o valor de
+                acordo/sentença como base de cálculo.
+              </p>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
             Valores monetários são exibidos com centavos: 10.000,00.
