@@ -695,8 +695,12 @@ function ProcessoForm({
   const sucumbenciasPercentualValor =
     (baseCalculo * percentual(form.sucumbencias_percentual)) / 100;
   const honorariosContratuais = Number(form.honorarios_valor ?? 0) || 0;
+  const sucumbenciasEmReais = Number(form.sucumbencias_valor ?? 0) || 0;
   const totalHonorarios =
-    honorariosContratuais + honorariosPercentualValor + sucumbenciasPercentualValor;
+    honorariosContratuais +
+    honorariosPercentualValor +
+    sucumbenciasEmReais +
+    sucumbenciasPercentualValor;
   return (
     <form
       className="space-y-4"
@@ -877,7 +881,7 @@ function ProcessoForm({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
             <div>
               <Label>Advogado</Label>
               <CatalogoCombobox
@@ -1058,6 +1062,14 @@ function ProcessoForm({
                 {formatBRL(sucumbenciasPercentualValor)} em sucumbências.
               </p>
             </div>
+            <div>
+              <Label>Sucumbências em R$</Label>
+              <CurrencyInput
+                value={form.sucumbencias_valor}
+                onValueChange={(value) => set("sucumbencias_valor", value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Valor fixo de sucumbências.</p>
+            </div>
           </div>
           <div>
             <Label>Valor da Causa (R$)</Label>
@@ -1067,7 +1079,8 @@ function ProcessoForm({
             />
             <p className="mt-2 text-xs text-muted-foreground">
               Contratuais {formatBRL(honorariosContratuais)} + percentuais{" "}
-              {formatBRL(honorariosPercentualValor)} + sucumbências{" "}
+              {formatBRL(honorariosPercentualValor)} + sucumbências em R${" "}
+              {formatBRL(sucumbenciasEmReais)} + sucumbências percentuais{" "}
               {formatBRL(sucumbenciasPercentualValor)}. Os percentuais usam o valor de
               acordo/sentença como base de cálculo.
             </p>
