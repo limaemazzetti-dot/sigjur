@@ -4,7 +4,7 @@ import { agendaProxima } from "@/lib/bi.functions";
 import { AlarmClock, CalendarClock, Gavel } from "lucide-react";
 
 const TIPOS = [
-  { key: "prazo", label: "Prazos", icon: AlarmClock, to: "/prazos" },
+  { key: "prazo", label: "Agenda", icon: AlarmClock, to: "/prazos" },
   { key: "audiencia", label: "Audiências", icon: Gavel, to: "/audiencias" },
   { key: "pericia", label: "Perícias", icon: CalendarClock, to: "/pericias" },
 ] as const;

@@ -188,7 +188,7 @@ function PrazosPage() {
       <div className="grid grid-cols-[minmax(0,1fr)] items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Jurídico</p>
-          <h1 className="font-serif text-3xl mt-1">Prazos</h1>
+          <h1 className="font-serif text-3xl mt-1">Agenda</h1>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
