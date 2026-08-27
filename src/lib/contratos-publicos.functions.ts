@@ -44,8 +44,11 @@ export const criarLinkPublicoContrato = createServerFn({ method: "POST" })
 
 export const consultarLinkPublicoContrato = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tokenSchema }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { data: row, error } = await context.supabase
+  .handler(async ({ data }) => {
+    // Esta função é chamada pela página pública, portanto não recebe o
+    // contexto autenticado usado pelas telas internas.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
       .rpc("consultar_link_publico_contrato" as never, { p_token: data.token } as never)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -54,8 +57,10 @@ export const consultarLinkPublicoContrato = createServerFn({ method: "POST" })
 
 export const enviarFormularioPublicoContrato = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tokenSchema, dados: dadosSchema }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { data: id, error } = await context.supabase.rpc(
+  .handler(async ({ data }) => {
+    // O RPC valida o token e a validade do link antes de aceitar o formulário.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: id, error } = await supabaseAdmin.rpc(
       "enviar_formulario_publico_contrato" as never,
       { p_token: data.token, p_dados: data.dados } as never,
     );
