@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState, type ReactNode } from "react";
 import {
   listProcessosResumo,
   listProcessoFilterOptions,
@@ -101,6 +101,35 @@ type ProcessFilterKey = (typeof PROCESS_FILTER_OPTIONS)[number]["key"];
 
 const DEFAULT_PROCESS_FILTERS: ProcessFilterKey[] = ["busca", "status", "tipoAcao", "prazo"];
 const PROCESS_FILTERS_STORAGE_KEY = "sigjur-processos-filtros-visiveis";
+
+function ProcessColumnFilter({
+  label,
+  active = false,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-center gap-1 text-center font-semibold outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label={`Filtrar coluna ${label}`}
+        >
+          <span>{label}</span>
+          <ListFilter className={active ? "size-3.5 text-primary" : "size-3.5 opacity-65"} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 p-3 normal-case tracking-normal text-left">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Filtrar por {label}</p>
+        {children}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function AdvogadosMultiSelect({
   value,
@@ -416,37 +445,6 @@ function ProcessosPage() {
           <h1 className="font-serif text-2xl sm:text-3xl mt-1 truncate">Processos</h1>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" aria-label="Selecionar filtros visíveis">
-                <ListFilter className="mr-2 size-4" />
-                Filtros
-                <span className="ml-1 text-muted-foreground">({visibleFilters.length})</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 p-2">
-              <p className="px-2 pb-2 pt-1 text-xs font-medium text-muted-foreground">
-                Escolha os filtros que deseja usar
-              </p>
-              <div className="space-y-1">
-                {PROCESS_FILTER_OPTIONS.map((filter) => {
-                  const checked = visibleFilters.includes(filter.key);
-                  return (
-                    <label
-                      key={filter.key}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm hover:bg-accent"
-                    >
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={(value) => toggleVisibleFilter(filter.key, value === true)}
-                      />
-                      <span>{filter.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </PopoverContent>
-          </Popover>
           <Button
             variant="outline"
             size="sm"
@@ -546,8 +544,8 @@ function ProcessosPage() {
         </div>
       </header>
 
-      <div className="min-h-0 flex flex-1 flex-col gap-4 xl:grid xl:grid-cols-[18rem_minmax(0,1fr)] xl:items-stretch">
-        <aside className="shrink-0 rounded-md border border-border/60 bg-card p-3 xl:min-h-0 xl:overflow-y-auto xl:[scrollbar-gutter:stable]">
+      <div className="min-h-0 flex flex-1 flex-col">
+        <aside className="hidden" aria-hidden="true">
           <div className="mb-3 flex items-center justify-between gap-2 border-b border-border/60 pb-2">
             <div>
               <p className="text-sm font-semibold">Filtros</p>
@@ -760,37 +758,188 @@ function ProcessosPage() {
                   <thead className="text-black text-xs uppercase tracking-wide">
                     <tr>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-1 py-3 font-semibold border border-black/20">
-                        #
+                        <ProcessColumnFilter label="#">
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => {
+                              setBusca("");
+                              setStatusFilter("all");
+                              setTipoAcaoFilter("all");
+                              setAutorFilter("");
+                              setReuFilter("");
+                              setNumeroFilter("");
+                              setAreaFilter("");
+                              setIndicacaoFilter("all");
+                              setAdvogadoFilter("all");
+                              setEntradaDeFilter("");
+                              setEntradaAteFilter("");
+                              setPrazoFilter("all");
+                            }}
+                          >
+                            Limpar filtros
+                          </Button>
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Autor / Responsável
+                        <ProcessColumnFilter
+                          label="Autor / Responsável"
+                          active={Boolean(autorFilter)}
+                        >
+                          <Input
+                            value={autorFilter}
+                            onChange={(event) => setAutorFilter(event.target.value)}
+                            placeholder="Digite o nome"
+                          />
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Réu
+                        <ProcessColumnFilter label="Réu" active={Boolean(reuFilter)}>
+                          <Input
+                            value={reuFilter}
+                            onChange={(event) => setReuFilter(event.target.value)}
+                            placeholder="Digite o nome"
+                          />
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Status
+                        <ProcessColumnFilter label="Status" active={statusFilter !== "all"}>
+                          <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              {(statusOpcoes.data ?? []).map((status) => (
+                                <SelectItem key={status.codigo} value={status.codigo}>
+                                  {status.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Nº do Processo
+                        <ProcessColumnFilter label="Nº do Processo" active={Boolean(numeroFilter)}>
+                          <Input
+                            value={numeroFilter}
+                            onChange={(event) => setNumeroFilter(event.target.value)}
+                            placeholder="Digite o número"
+                            inputMode="numeric"
+                          />
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Tipo de Ação
+                        <ProcessColumnFilter label="Tipo de Ação" active={tipoAcaoFilter !== "all"}>
+                          <Select value={tipoAcaoFilter} onValueChange={setTipoAcaoFilter}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              {(tiposAcao.data ?? []).map((tipo) => (
+                                <SelectItem key={tipo} value={tipo}>
+                                  {tipo}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Área
+                        <ProcessColumnFilter label="Área" active={Boolean(areaFilter)}>
+                          <Input
+                            value={areaFilter}
+                            onChange={(event) => setAreaFilter(event.target.value)}
+                            placeholder="Digite a área"
+                          />
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Data de entrada
+                        <ProcessColumnFilter
+                          label="Data de entrada"
+                          active={Boolean(entradaDeFilter || entradaAteFilter)}
+                        >
+                          <div className="space-y-2">
+                            <Input
+                              type="date"
+                              value={entradaDeFilter}
+                              onChange={(event) => setEntradaDeFilter(event.target.value)}
+                              aria-label="Data de entrada inicial"
+                            />
+                            <Input
+                              type="date"
+                              value={entradaAteFilter}
+                              onChange={(event) => setEntradaAteFilter(event.target.value)}
+                              aria-label="Data de entrada final"
+                            />
+                            <Select
+                              value={order}
+                              onValueChange={(value) => setOrder(value as typeof order)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="entrada_desc">Recentes primeiro</SelectItem>
+                                <SelectItem value="entrada_asc">Antigos primeiro</SelectItem>
+                                <SelectItem value="cadastro_desc">Cadastro recente</SelectItem>
+                                <SelectItem value="cadastro_asc">Cadastro antigo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Prazo em Aberto?
+                        <ProcessColumnFilter
+                          label="Prazo em Aberto?"
+                          active={prazoFilter !== "all"}
+                        >
+                          <Select value={prazoFilter} onValueChange={setPrazoFilter}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              <SelectItem value="aberto">Sim</SelectItem>
+                              <SelectItem value="sem_prazo">Não</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Indicador
+                        <ProcessColumnFilter label="Indicador" active={indicacaoFilter !== "all"}>
+                          <Select value={indicacaoFilter} onValueChange={setIndicacaoFilter}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              {(indicacoes.data ?? []).map((indicacao) => (
+                                <SelectItem key={indicacao.id} value={indicacao.id}>
+                                  {indicacao.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </ProcessColumnFilter>
                       </th>
                       <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                        Advogado
+                        <ProcessColumnFilter label="Advogado" active={advogadoFilter !== "all"}>
+                          <Select value={advogadoFilter} onValueChange={setAdvogadoFilter}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              {(advogados.data ?? []).map(({ valor: advogado }) => (
+                                <SelectItem key={advogado} value={advogado}>
+                                  {advogado}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </ProcessColumnFilter>
                       </th>
                     </tr>
                   </thead>
