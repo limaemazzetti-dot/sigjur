@@ -45,6 +45,7 @@ export const listPrazos = createServerFn({ method: "POST" })
       .object({
         status: z.enum(["aberto", "cumprido", "cancelado"]).nullable().optional(),
         q: z.string().nullable().optional(),
+        processo_id: z.string().uuid().optional(),
         tipo_evento: z.enum(["prazo", "audiencia", "pericia"]).optional(),
       })
       .parse(d ?? {}),
@@ -57,6 +58,7 @@ export const listPrazos = createServerFn({ method: "POST" })
       )
       .order("data_prazo", { ascending: true });
     if (data.status) q = q.eq("status", data.status);
+    if (data.processo_id) q = q.eq("processo_id", data.processo_id);
     if (data.tipo_evento) q = q.eq("tipo_evento", data.tipo_evento);
     if (data.q) q = q.ilike("titulo", `%${data.q}%`);
     const { data: rows, error } = await q;

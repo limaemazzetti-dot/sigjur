@@ -502,6 +502,21 @@ export const upsertProcesso = createServerFn({ method: "POST" })
     for (const option of (catalogRows ?? []) as Array<{ categoria: string; valor: string }>) {
       catalogo.set(`${option.categoria}:${normalizeCatalogValue(option.valor)}`, option.valor);
     }
+    const valoresLegados = new Map<string, string>();
+    if (data.id) {
+      const { data: processoAtual, error: processoAtualError } = await context.supabase
+        .from("processos" as never)
+        .select("tipo_acao, materia, fase, advogado, origem")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (processoAtualError) throw new Error(processoAtualError.message);
+      if (processoAtual) {
+        for (const categoria of ["tipo_acao", "materia", "fase", "advogado", "origem"] as const) {
+          const valor = (processoAtual as Record<string, string | null>)[categoria];
+          if (valor) valoresLegados.set(categoria, valor);
+        }
+      }
+    }
     const catalogoLabel: Record<string, string> = {
       tipo_acao: "tipo de ação",
       materia: "matéria",
@@ -513,6 +528,7 @@ export const upsertProcesso = createServerFn({ method: "POST" })
       const valor = value?.trim();
       if (!valor) return value;
       const opcao = catalogo.get(`${categoria}:${normalizeCatalogValue(valor)}`);
+      if (!opcao && valoresLegados.get(categoria) === valor) return valor;
       if (!opcao) {
         throw new Error(
           `Selecione um(a) ${catalogoLabel[categoria]} ativo(a) em Cadastros antes de salvar o processo.`,

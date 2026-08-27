@@ -63,6 +63,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { listStatusProcesso } from "@/lib/status-processo.functions";
 import { listIndicacoes, type IndicacaoRow } from "@/lib/indicacoes.functions";
+import { listPrazos } from "@/lib/prazos.functions";
 
 export const Route = createFileRoute("/_authenticated/processos")({
   component: ProcessosRoute,
@@ -141,10 +142,14 @@ function AdvogadosMultiSelect({
   onValueChange: (value: string) => void;
 }) {
   const selecionados = splitAdvogados(value);
+  const selecionadosAtivos = selecionados.filter((selecionado) =>
+    options.some((opcao) => normalizeName(opcao) === normalizeName(selecionado)),
+  );
+  const possuiAdvogadoLegado = selecionadosAtivos.length !== selecionados.length;
   const alterarSelecao = (advogado: string, marcado: boolean) => {
     const proximos = marcado
-      ? [...new Set([...selecionados, advogado])]
-      : selecionados.filter((item) => item !== advogado);
+      ? [...new Set([...selecionadosAtivos, advogado])]
+      : selecionadosAtivos.filter((item) => item !== advogado);
     onValueChange(proximos.join(", "));
   };
 
@@ -165,7 +170,9 @@ function AdvogadosMultiSelect({
       <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-2">
         <div className="max-h-56 space-y-1 overflow-y-auto">
           {options.map((advogado) => {
-            const marcado = selecionados.includes(advogado);
+            const marcado = selecionadosAtivos.some(
+              (selecionado) => normalizeName(selecionado) === normalizeName(advogado),
+            );
             return (
               <label
                 key={advogado}
@@ -182,6 +189,11 @@ function AdvogadosMultiSelect({
           {options.length === 0 && (
             <p className="px-2 py-3 text-sm text-muted-foreground">
               Cadastre advogados ativos em Cadastros primeiro.
+            </p>
+          )}
+          {possuiAdvogadoLegado && (
+            <p className="border-t px-2 pt-2 text-xs text-amber-700 dark:text-amber-300">
+              Há um advogado legado neste processo. Escolha um advogado ativo para substituí-lo.
             </p>
           )}
         </div>
@@ -404,6 +416,7 @@ function ProcessosPage() {
     exportToPdf({
       filename: "processos",
       titulo: "Relatório de Processos",
+      orientation: "landscape",
       subtitulo:
         `${list.data.length} processos` +
         (statusFilter !== "all" ? ` — ${statusLabels[statusFilter] ?? statusFilter}` : ""),
@@ -1167,6 +1180,13 @@ function ProcessoForm({
     resultado: initial?.resultado ?? "",
     observacoes: initial?.observacoes ?? "",
   });
+  const prazosVinculados = useQuery({
+    queryKey: ["prazos-processo", initial?.id],
+    queryFn: () => listPrazos({ data: { processo_id: initial!.id, status: "aberto" } }),
+    enabled: Boolean(initial?.id),
+    staleTime: 0,
+  });
+  const eventosAbertos = prazosVinculados.data ?? [];
 
   const catTipos = useQuery({
     queryKey: ["catalogo", "tipo_acao"],
@@ -1344,10 +1364,19 @@ function ProcessoForm({
 
         <TabsContent value="partes-prazos" className="space-y-4 pt-4">
           <div className="rounded-md border border-border/60 p-3 space-y-3">
-            <p className="text-sm font-medium">Prazo do processo</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">Prazos do processo</p>
+              {(Boolean(form.data_prazo) || eventosAbertos.length > 0) && (
+                <span className="rounded-full bg-primary/15 px-2 py-1 text-xs font-semibold text-primary">
+                  {eventosAbertos.length > 0
+                    ? `${eventosAbertos.length} evento(s) aberto(s)`
+                    : "Prazo lançado no processo"}
+                </span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Ao informar uma data, o processo será marcado automaticamente como tendo prazo em
-              aberto. Audiências e perícias pendentes também atualizam essa informação.
+              A coluna “Prazo em aberto” fica como Sim quando existe uma data abaixo ou algum evento
+              pendente na Agenda, Audiências ou Perícias.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-3">
               <div>
@@ -1366,6 +1395,31 @@ function ProcessoForm({
                 />
               </div>
             </div>
+            {eventosAbertos.length > 0 && (
+              <div className="space-y-2 border-t border-border/60 pt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Eventos abertos que deixam este processo com prazo pendente
+                </p>
+                {eventosAbertos.map((evento) => (
+                  <div key={evento.id} className="rounded-md bg-secondary/45 px-3 py-2 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium">{evento.titulo}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(`${evento.data_prazo}T00:00:00`).toLocaleDateString("pt-BR")} ·{" "}
+                        {evento.tipo_evento === "audiencia"
+                          ? "Audiência"
+                          : evento.tipo_evento === "pericia"
+                            ? "Perícia"
+                            : "Agenda"}
+                      </span>
+                    </div>
+                    {evento.descricao && (
+                      <p className="mt-1 text-xs text-muted-foreground">{evento.descricao}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="rounded-md border border-border/60 p-3 space-y-3">
