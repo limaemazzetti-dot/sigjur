@@ -49,6 +49,7 @@ import {
   ListChecks,
   Save,
   Trash2,
+  ListFilter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportToExcel, exportToPdf, formatBRL } from "@/lib/export";
@@ -79,6 +80,27 @@ function splitAdvogados(value: string | null | undefined) {
     .map((item) => item.trim())
     .filter(Boolean);
 }
+
+const PROCESS_FILTER_OPTIONS = [
+  { key: "busca", label: "Busca geral" },
+  { key: "status", label: "Status" },
+  { key: "tipoAcao", label: "Tipo de ação" },
+  { key: "prazo", label: "Prazo em aberto" },
+  { key: "autor", label: "Autor / responsável" },
+  { key: "reu", label: "Réu" },
+  { key: "numero", label: "Nº do processo" },
+  { key: "area", label: "Área" },
+  { key: "indicacao", label: "Indicador" },
+  { key: "advogado", label: "Advogado" },
+  { key: "entradaDe", label: "Entrada a partir de" },
+  { key: "entradaAte", label: "Entrada até" },
+  { key: "ordem", label: "Ordenação" },
+] as const;
+
+type ProcessFilterKey = (typeof PROCESS_FILTER_OPTIONS)[number]["key"];
+
+const DEFAULT_PROCESS_FILTERS: ProcessFilterKey[] = ["busca", "status", "tipoAcao", "prazo"];
+const PROCESS_FILTERS_STORAGE_KEY = "sigjur-processos-filtros-visiveis";
 
 function AdvogadosMultiSelect({
   value,
@@ -202,11 +224,37 @@ function ProcessosPage() {
   const [entradaDeFilter, setEntradaDeFilter] = useState("");
   const [entradaAteFilter, setEntradaAteFilter] = useState("");
   const [prazoFilter, setPrazoFilter] = useState("all");
+  const [visibleFilters, setVisibleFilters] = useState<ProcessFilterKey[]>(DEFAULT_PROCESS_FILTERS);
   const [order, setOrder] = useState<
     "entrada_desc" | "entrada_asc" | "cadastro_desc" | "cadastro_asc"
   >("entrada_desc");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ProcessoResumoRow | null>(null);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(PROCESS_FILTERS_STORAGE_KEY);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved) as unknown;
+      if (!Array.isArray(parsed)) return;
+      const validFilters = parsed.filter((filter): filter is ProcessFilterKey =>
+        PROCESS_FILTER_OPTIONS.some((option) => option.key === filter),
+      );
+      setVisibleFilters(validFilters);
+    } catch {
+      window.localStorage.removeItem(PROCESS_FILTERS_STORAGE_KEY);
+    }
+  }, []);
+
+  const toggleVisibleFilter = (filter: ProcessFilterKey, checked: boolean) => {
+    setVisibleFilters((current) => {
+      const next = checked
+        ? [...current, filter]
+        : current.filter((currentFilter) => currentFilter !== filter);
+      window.localStorage.setItem(PROCESS_FILTERS_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
 
   const list = useQuery({
     queryKey: [
@@ -368,6 +416,37 @@ function ProcessosPage() {
           <h1 className="font-serif text-2xl sm:text-3xl mt-1 truncate">Processos</h1>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" aria-label="Selecionar filtros visíveis">
+                <ListFilter className="mr-2 size-4" />
+                Filtros
+                <span className="ml-1 text-muted-foreground">({visibleFilters.length})</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 p-2">
+              <p className="px-2 pb-2 pt-1 text-xs font-medium text-muted-foreground">
+                Escolha os filtros que deseja usar
+              </p>
+              <div className="space-y-1">
+                {PROCESS_FILTER_OPTIONS.map((filter) => {
+                  const checked = visibleFilters.includes(filter.key);
+                  return (
+                    <label
+                      key={filter.key}
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm hover:bg-accent"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(value) => toggleVisibleFilter(filter.key, value === true)}
+                      />
+                      <span>{filter.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button
             variant="outline"
             size="sm"
@@ -467,319 +546,335 @@ function ProcessosPage() {
         </div>
       </header>
 
-      <div className="shrink-0 grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_12rem_13rem_11rem_13rem]">
-        <div className="min-w-0">
-          <Label className="text-xs">Buscar</Label>
-          <Input
-            placeholder="Autor, réu ou nº CNJ"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Status</Label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {(statusOpcoes.data ?? []).map((s) => (
-                <SelectItem key={s.codigo} value={s.codigo}>
-                  {s.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Tipo de ação</Label>
-          <Select value={tipoAcaoFilter} onValueChange={setTipoAcaoFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {(tiposAcao.data ?? []).map((tipo) => (
-                <SelectItem key={tipo} value={tipo}>
-                  {tipo}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Prazo em aberto</Label>
-          <Select value={prazoFilter} onValueChange={setPrazoFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="aberto">Sim</SelectItem>
-              <SelectItem value="sem_prazo">Não</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Ordenar</Label>
-          <Select value={order} onValueChange={(value) => setOrder(value as typeof order)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="entrada_desc">Entrada: recentes primeiro</SelectItem>
-              <SelectItem value="entrada_asc">Entrada: antigos primeiro</SelectItem>
-              <SelectItem value="cadastro_desc">Cadastro: recentes primeiro</SelectItem>
-              <SelectItem value="cadastro_asc">Cadastro: antigos primeiro</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="shrink-0 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <div className="min-w-0">
-          <Label className="text-xs">Autor / responsável</Label>
-          <Input
-            value={autorFilter}
-            onChange={(e) => setAutorFilter(e.target.value)}
-            placeholder="Filtrar"
-          />
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Réu</Label>
-          <Input
-            value={reuFilter}
-            onChange={(e) => setReuFilter(e.target.value)}
-            placeholder="Filtrar"
-          />
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Nº do processo</Label>
-          <Input
-            value={numeroFilter}
-            onChange={(e) => setNumeroFilter(e.target.value)}
-            placeholder="Filtrar"
-            inputMode="numeric"
-          />
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Área</Label>
-          <Input
-            value={areaFilter}
-            onChange={(e) => setAreaFilter(e.target.value)}
-            placeholder="Filtrar"
-          />
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Indicador</Label>
-          <Select value={indicacaoFilter} onValueChange={setIndicacaoFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              {(indicacoes.data ?? []).map((indicacao) => (
-                <SelectItem key={indicacao.id} value={indicacao.id}>
-                  {indicacao.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Advogado</Label>
-          <Select value={advogadoFilter} onValueChange={setAdvogadoFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {(advogados.data ?? []).map(({ valor: advogado }) => (
-                <SelectItem key={advogado} value={advogado}>
-                  {advogado}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Entrada a partir de</Label>
-          <Input
-            type="date"
-            value={entradaDeFilter}
-            onChange={(e) => setEntradaDeFilter(e.target.value)}
-          />
-        </div>
-        <div className="min-w-0">
-          <Label className="text-xs">Entrada até</Label>
-          <Input
-            type="date"
-            value={entradaAteFilter}
-            onChange={(e) => setEntradaAteFilter(e.target.value)}
-          />
-        </div>
-        <div className="flex items-end">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => {
-              setBusca("");
-              setStatusFilter("all");
-              setTipoAcaoFilter("all");
-              setAutorFilter("");
-              setReuFilter("");
-              setNumeroFilter("");
-              setAreaFilter("");
-              setIndicacaoFilter("all");
-              setAdvogadoFilter("all");
-              setEntradaDeFilter("");
-              setEntradaAteFilter("");
-              setPrazoFilter("all");
-            }}
-          >
-            Limpar filtros
-          </Button>
-        </div>
-      </div>
-
-      {list.isLoading ? (
-        <p className="flex-1 min-h-0 text-sm text-muted-foreground py-10 text-center">
-          Carregando…
-        </p>
-      ) : list.data && list.data.length > 0 ? (
-        <Card className="flex-1 min-h-0 border-border/60 overflow-hidden rounded-md">
-          <div className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable]">
-            <table className="w-full table-fixed text-sm border-collapse">
-              <colgroup>
-                <col className="w-[3%]" />
-                <col className="w-[12%]" />
-                <col className="w-[10%]" />
-                <col className="w-[8%]" />
-                <col className="w-[11%]" />
-                <col className="w-[10%]" />
-                <col className="w-[8%]" />
-                <col className="w-[9%]" />
-                <col className="w-[8%]" />
-                <col className="w-[11%]" />
-                <col className="w-[10%]" />
-              </colgroup>
-              <thead className="text-black text-xs uppercase tracking-wide">
-                <tr>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-1 py-3 font-semibold border border-black/20">
-                    #
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Autor / Responsável
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Réu
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Status
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Nº do Processo
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Tipo de Ação
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Área
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Data de entrada
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Prazo em Aberto?
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Indicador
-                  </th>
-                  <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
-                    Advogado
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-background">
-                {list.data.map((p, idx) => {
-                  const isAtivo = p.status !== "arquivado" && p.status !== "suspenso";
-                  const autorNormalizado = normalizeName(p.autor);
-                  const responsavel = [p.clientes?.nome, p.outro_envolvido].find(
-                    (nome) => nome && normalizeName(nome) !== autorNormalizado,
-                  );
-                  return (
-                    <tr
-                      key={p.id}
-                      onClick={() => setEditing(p)}
-                      className="hover:bg-secondary/40 cursor-pointer"
-                    >
-                      <td className="px-1 py-2 text-center border border-border/60 tabular-nums text-xs text-muted-foreground font-semibold">
-                        {idx + 1}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        <span className="block font-medium uppercase">{p.autor || "—"}</span>
-                        {responsavel && (
-                          <span className="mt-0.5 block text-xs text-muted-foreground">
-                            Responsável: {responsavel}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        {p.reu || "—"}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        <span
-                          className={`inline-block px-3 py-1 rounded text-xs font-semibold border ${isAtivo ? "bg-primary/20 text-primary border-primary/40" : "bg-muted text-muted-foreground border-border"}`}
-                        >
-                          {statusLabels[p.status] ?? p.status}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-center align-top font-mono text-xs break-all border border-border/60">
-                        {p.numero_cnj ?? "—"}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        {p.tipo_acao ?? "—"}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        {p.area?.trim() || p.materia?.trim() || "—"}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 whitespace-normal break-words">
-                        {p.data_inicio
-                          ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
-                          : "—"}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        <span
-                          className={
-                            p.prazo_em_aberto
-                              ? "text-primary font-semibold"
-                              : "text-muted-foreground"
-                          }
-                        >
-                          {p.prazo_em_aberto ? "Sim" : "Não"}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        {p.indicacoes?.nome ?? "—"}
-                      </td>
-                      <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                        {p.advogado ?? "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      <div className="min-h-0 flex flex-1 flex-col gap-4 xl:grid xl:grid-cols-[18rem_minmax(0,1fr)] xl:items-stretch">
+        <aside className="shrink-0 rounded-md border border-border/60 bg-card p-3 xl:min-h-0 xl:overflow-y-auto xl:[scrollbar-gutter:stable]">
+          <div className="mb-3 flex items-center justify-between gap-2 border-b border-border/60 pb-2">
+            <div>
+              <p className="text-sm font-semibold">Filtros</p>
+              <p className="text-xs text-muted-foreground">Selecione no botão acima</p>
+            </div>
+            <ListFilter className="size-4 text-muted-foreground" />
           </div>
-        </Card>
-      ) : (
-        <Card className="flex-1 min-h-0 border-border/60 rounded-md">
-          <CardContent className="py-14 text-center text-muted-foreground text-sm">
-            Nenhum processo encontrado.
-          </CardContent>
-        </Card>
-      )}
+          {visibleFilters.length === 0 ? (
+            <p className="py-3 text-sm text-muted-foreground">
+              Nenhum filtro selecionado. Clique em Filtros para adicionar.
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <div className={visibleFilters.includes("busca") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Buscar</Label>
+                <Input
+                  placeholder="Autor, réu ou nº CNJ"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                />
+              </div>
+              <div className={visibleFilters.includes("status") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {(statusOpcoes.data ?? []).map((s) => (
+                      <SelectItem key={s.codigo} value={s.codigo}>
+                        {s.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={visibleFilters.includes("tipoAcao") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Tipo de ação</Label>
+                <Select value={tipoAcaoFilter} onValueChange={setTipoAcaoFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {(tiposAcao.data ?? []).map((tipo) => (
+                      <SelectItem key={tipo} value={tipo}>
+                        {tipo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={visibleFilters.includes("prazo") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Prazo em aberto</Label>
+                <Select value={prazoFilter} onValueChange={setPrazoFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="aberto">Sim</SelectItem>
+                    <SelectItem value="sem_prazo">Não</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={visibleFilters.includes("ordem") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Ordenar</Label>
+                <Select value={order} onValueChange={(value) => setOrder(value as typeof order)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entrada_desc">Entrada: recentes primeiro</SelectItem>
+                    <SelectItem value="entrada_asc">Entrada: antigos primeiro</SelectItem>
+                    <SelectItem value="cadastro_desc">Cadastro: recentes primeiro</SelectItem>
+                    <SelectItem value="cadastro_asc">Cadastro: antigos primeiro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={visibleFilters.includes("autor") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Autor / responsável</Label>
+                <Input
+                  value={autorFilter}
+                  onChange={(e) => setAutorFilter(e.target.value)}
+                  placeholder="Filtrar"
+                />
+              </div>
+              <div className={visibleFilters.includes("reu") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Réu</Label>
+                <Input
+                  value={reuFilter}
+                  onChange={(e) => setReuFilter(e.target.value)}
+                  placeholder="Filtrar"
+                />
+              </div>
+              <div className={visibleFilters.includes("numero") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Nº do processo</Label>
+                <Input
+                  value={numeroFilter}
+                  onChange={(e) => setNumeroFilter(e.target.value)}
+                  placeholder="Filtrar"
+                  inputMode="numeric"
+                />
+              </div>
+              <div className={visibleFilters.includes("area") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Área</Label>
+                <Input
+                  value={areaFilter}
+                  onChange={(e) => setAreaFilter(e.target.value)}
+                  placeholder="Filtrar"
+                />
+              </div>
+              <div className={visibleFilters.includes("indicacao") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Indicador</Label>
+                <Select value={indicacaoFilter} onValueChange={setIndicacaoFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {(indicacoes.data ?? []).map((indicacao) => (
+                      <SelectItem key={indicacao.id} value={indicacao.id}>
+                        {indicacao.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={visibleFilters.includes("advogado") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Advogado</Label>
+                <Select value={advogadoFilter} onValueChange={setAdvogadoFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {(advogados.data ?? []).map(({ valor: advogado }) => (
+                      <SelectItem key={advogado} value={advogado}>
+                        {advogado}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={visibleFilters.includes("entradaDe") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Entrada a partir de</Label>
+                <Input
+                  type="date"
+                  value={entradaDeFilter}
+                  onChange={(e) => setEntradaDeFilter(e.target.value)}
+                />
+              </div>
+              <div className={visibleFilters.includes("entradaAte") ? "min-w-0" : "hidden"}>
+                <Label className="text-xs">Entrada até</Label>
+                <Input
+                  type="date"
+                  value={entradaAteFilter}
+                  onChange={(e) => setEntradaAteFilter(e.target.value)}
+                />
+              </div>
+              <div className="flex items-end">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setBusca("");
+                    setStatusFilter("all");
+                    setTipoAcaoFilter("all");
+                    setAutorFilter("");
+                    setReuFilter("");
+                    setNumeroFilter("");
+                    setAreaFilter("");
+                    setIndicacaoFilter("all");
+                    setAdvogadoFilter("all");
+                    setEntradaDeFilter("");
+                    setEntradaAteFilter("");
+                    setPrazoFilter("all");
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              </div>
+            </div>
+          )}
+        </aside>
+
+        <div className="min-h-0 flex flex-1 flex-col">
+          {list.isLoading ? (
+            <p className="flex-1 min-h-0 text-sm text-muted-foreground py-10 text-center">
+              Carregando…
+            </p>
+          ) : list.data && list.data.length > 0 ? (
+            <Card className="flex-1 min-h-0 border-border/60 overflow-hidden rounded-md">
+              <div className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable]">
+                <table className="w-full table-fixed text-sm border-collapse">
+                  <colgroup>
+                    <col className="w-[3%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[9%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[10%]" />
+                  </colgroup>
+                  <thead className="text-black text-xs uppercase tracking-wide">
+                    <tr>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-1 py-3 font-semibold border border-black/20">
+                        #
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Autor / Responsável
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Réu
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Status
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Nº do Processo
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Tipo de Ação
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Área
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Data de entrada
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Prazo em Aberto?
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Indicador
+                      </th>
+                      <th className="sticky top-0 z-20 bg-[#d2b16f] text-center px-2 py-3 font-semibold leading-tight break-words border border-black/20">
+                        Advogado
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-background">
+                    {list.data.map((p, idx) => {
+                      const isAtivo = p.status !== "arquivado" && p.status !== "suspenso";
+                      const autorNormalizado = normalizeName(p.autor);
+                      const responsavel = [p.clientes?.nome, p.outro_envolvido].find(
+                        (nome) => nome && normalizeName(nome) !== autorNormalizado,
+                      );
+                      return (
+                        <tr
+                          key={p.id}
+                          onClick={() => setEditing(p)}
+                          className="hover:bg-secondary/40 cursor-pointer"
+                        >
+                          <td className="px-1 py-2 text-center border border-border/60 tabular-nums text-xs text-muted-foreground font-semibold">
+                            {idx + 1}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            <span className="block font-medium uppercase">{p.autor || "—"}</span>
+                            {responsavel && (
+                              <span className="mt-0.5 block text-xs text-muted-foreground">
+                                Responsável: {responsavel}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            {p.reu || "—"}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            <span
+                              className={`inline-block px-3 py-1 rounded text-xs font-semibold border ${isAtivo ? "bg-primary/20 text-primary border-primary/40" : "bg-muted text-muted-foreground border-border"}`}
+                            >
+                              {statusLabels[p.status] ?? p.status}
+                            </span>
+                          </td>
+                          <td className="px-2 py-2 text-center align-top font-mono text-xs break-all border border-border/60">
+                            {p.numero_cnj ?? "—"}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            {p.tipo_acao ?? "—"}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            {p.area?.trim() || p.materia?.trim() || "—"}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 whitespace-normal break-words">
+                            {p.data_inicio
+                              ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
+                              : "—"}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            <span
+                              className={
+                                p.prazo_em_aberto
+                                  ? "text-primary font-semibold"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {p.prazo_em_aberto ? "Sim" : "Não"}
+                            </span>
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            {p.indicacoes?.nome ?? "—"}
+                          </td>
+                          <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
+                            {p.advogado ?? "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          ) : (
+            <Card className="flex-1 min-h-0 border-border/60 rounded-md">
+              <CardContent className="py-14 text-center text-muted-foreground text-sm">
+                Nenhum processo encontrado.
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
 
       <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <SheetContent
