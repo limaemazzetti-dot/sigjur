@@ -1017,8 +1017,27 @@ function ProcessosPage() {
             </Card>
           ) : (
             <Card className="flex-1 min-h-0 border-border/60 rounded-md">
-              <CardContent className="py-14 text-center text-muted-foreground text-sm">
-                Nenhum processo encontrado.
+              <CardContent className="flex h-full flex-col items-center justify-center gap-4 py-14 text-center text-muted-foreground text-sm">
+                <p>Nenhum processo encontrado com os filtros informados.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setBusca("");
+                    setStatusFilter("all");
+                    setTipoAcaoFilter("all");
+                    setAutorFilter("");
+                    setReuFilter("");
+                    setNumeroFilter("");
+                    setAreaFilter("");
+                    setIndicacaoFilter("all");
+                    setAdvogadoFilter("all");
+                    setEntradaDeFilter("");
+                    setEntradaAteFilter("");
+                    setPrazoFilter("all");
+                  }}
+                >
+                  Limpar filtros e mostrar processos
+                </Button>
               </CardContent>
             </Card>
           )}
