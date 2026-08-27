@@ -71,6 +71,7 @@ function ModelosPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateRow | null>(null);
+  const [contractLink, setContractLink] = useState<string | null>(null);
 
   const list = useQuery({
     queryKey: ["templates"],
@@ -102,11 +103,18 @@ function ModelosPage() {
     },
   });
   const mCriarLink = useMutation({
-    mutationFn: () => criarLinkPublicoContrato({ data: {} }),
+    mutationFn: (nome: string) => criarLinkPublicoContrato({ data: { nome } }),
     onSuccess: async ({ token, expira_em }) => {
       const url = `${window.location.origin}/contrato/${token}`;
-      await navigator.clipboard.writeText(url);
-      toast.success(`Link copiado. Válido até ${new Date(expira_em).toLocaleDateString("pt-BR")}.`);
+      setContractLink(url);
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success(
+          `Link copiado. Válido até ${new Date(expira_em).toLocaleDateString("pt-BR")}.`,
+        );
+      } catch {
+        toast.success("Link gerado. Copie-o pelo campo exibido na tela.");
+      }
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -150,6 +158,31 @@ function ModelosPage() {
         </Dialog>
       </header>
 
+      {contractLink && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="space-y-2 p-4">
+            <p className="text-sm font-medium">Link público do contrato criado</p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input value={contractLink} readOnly aria-label="Link público do contrato" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(contractLink);
+                    toast.success("Link copiado.");
+                  } catch {
+                    toast.error("Selecione e copie o link manualmente.");
+                  }
+                }}
+              >
+                <Copy className="mr-2 size-4" /> Copiar link
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-border/60 overflow-hidden">
         <CardContent className="p-0">
           <div className="hidden sm:block overflow-x-auto">
@@ -190,7 +223,7 @@ function ModelosPage() {
                           type="button"
                           variant="outline"
                           disabled={mCriarLink.isPending}
-                          onClick={() => mCriarLink.mutate()}
+                          onClick={() => mCriarLink.mutate(t.nome)}
                         >
                           <Copy className="mr-2 size-4" />{" "}
                           {mCriarLink.isPending ? "Gerando…" : "Copiar link do contrato"}
@@ -240,6 +273,16 @@ function ModelosPage() {
                         }}
                       >
                         <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={mCriarLink.isPending}
+                        onClick={() => mCriarLink.mutate(t.nome)}
+                        aria-label={`Copiar link do contrato ${t.nome}`}
+                      >
+                        <Copy className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
