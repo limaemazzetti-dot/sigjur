@@ -285,7 +285,7 @@ async function buildValuesFor(
         "Data encerramento",
         "Origem",
         "Valor causa",
-        "Cliente",
+        "Cadastro vinculado",
         "Observações",
       ],
       ...list.map((p) => [

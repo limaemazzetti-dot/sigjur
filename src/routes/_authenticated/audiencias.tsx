@@ -71,7 +71,7 @@ function cleanDescricao(descricao: string | null | undefined) {
 }
 
 function processClientName(processo: { clientes?: { nome: string } | null; autor: string }) {
-  return processo.clientes?.nome || processo.autor || "Cliente não informado";
+  return processo.autor || processo.clientes?.nome || "Cliente não informado";
 }
 
 function AudienciasPage() {
@@ -188,11 +188,12 @@ function AudienciasPage() {
                             Nº {p.processos.numero_cnj}
                           </p>
                         )}
-                        {p.processos.clientes?.nome && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            Cliente: {p.processos.clientes.nome}
-                          </p>
-                        )}
+                        {p.processos.clientes?.nome &&
+                          p.processos.clientes.nome !== p.processos.autor && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              Cadastro vinculado: {p.processos.clientes.nome}
+                            </p>
+                          )}
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground italic mt-0.5">

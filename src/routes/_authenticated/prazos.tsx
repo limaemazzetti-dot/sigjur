@@ -173,7 +173,7 @@ function PrazosPage() {
           data: formatDateBR(p.data_prazo),
           detalhes: p.descricao ? `${p.titulo}\n${p.descricao}` : p.titulo,
           tipo: isPericia ? "Perícia" : isAudiencia ? "Audiência" : "Prazo",
-          cliente: p.processos?.clientes?.nome ?? p.processos?.autor ?? "Não informado",
+          cliente: p.processos?.autor ?? p.processos?.clientes?.nome ?? "Não informado",
           processo: p.processos?.numero_cnj ?? "Não informado",
           prioridade: PRIO_LABEL[p.prioridade],
           status: STATUS_LABEL[p.status],
@@ -213,7 +213,7 @@ function PrazosPage() {
                 initial={editing ?? undefined}
                 processos={(processos.data ?? []).map((p) => ({
                   id: p.id,
-                  label: `${p.autor} × ${p.reu}${p.numero_cnj ? " — " + p.numero_cnj : ""}${p.clientes?.nome ? ` (${p.clientes.nome})` : ""}`,
+                  label: `${p.autor} × ${p.reu}${p.numero_cnj ? " — " + p.numero_cnj : ""}${p.clientes?.nome && p.clientes.nome !== p.autor ? ` — Cadastro vinculado: ${p.clientes.nome}` : ""}`,
                   cliente: p.clientes?.nome ?? null,
                   numero_cnj: p.numero_cnj,
                 }))}
@@ -366,9 +366,10 @@ function PrazosPage() {
                                 {p.processos.autor} × {p.processos.reu}
                               </p>
                               {p.processos.numero_cnj && <p>Nº {p.processos.numero_cnj}</p>}
-                              {p.processos.clientes?.nome && (
-                                <p>Cliente: {p.processos.clientes.nome}</p>
-                              )}
+                              {p.processos.clientes?.nome &&
+                                p.processos.clientes.nome !== p.processos.autor && (
+                                  <p>Cadastro vinculado: {p.processos.clientes.nome}</p>
+                                )}
                             </div>
                           ) : (
                             "—"

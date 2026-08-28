@@ -32,12 +32,19 @@ export type ProcessPickerOption = {
 
 function processClient(option: ProcessPickerOption) {
   return (
+    option.autor?.trim() ||
     option.clientes?.nome?.trim() ||
     option.cliente?.trim() ||
-    option.autor?.trim() ||
     option.label?.trim() ||
     "Processo sem cliente"
   );
+}
+
+function linkedCadastro(option: ProcessPickerOption) {
+  const autor = option.autor?.trim();
+  const cadastro = option.clientes?.nome?.trim() || option.cliente?.trim();
+  if (!cadastro || normalize(cadastro) === normalize(autor ?? "")) return null;
+  return cadastro;
 }
 
 function processNumber(option: ProcessPickerOption) {
@@ -75,7 +82,14 @@ export function SearchableProcessPicker({
     if (!term) return ordered;
     return ordered.filter((process) =>
       normalize(
-        [processClient(process), process.numero_cnj, process.autor, process.reu, process.label]
+        [
+          processClient(process),
+          linkedCadastro(process),
+          process.numero_cnj,
+          process.autor,
+          process.reu,
+          process.label,
+        ]
           .filter(Boolean)
           .join(" "),
       ).includes(term),
@@ -107,6 +121,11 @@ export function SearchableProcessPicker({
               <span className="block truncate text-xs text-muted-foreground">
                 Processo nº {processNumber(selected)}
               </span>
+              {linkedCadastro(selected) && (
+                <span className="block truncate text-xs text-muted-foreground/80">
+                  Cadastro vinculado: {linkedCadastro(selected)}
+                </span>
+              )}
             </span>
           ) : (
             <span className="truncate text-muted-foreground">{placeholder}</span>
@@ -144,6 +163,11 @@ export function SearchableProcessPicker({
                     <span className="block truncate text-xs text-muted-foreground">
                       Processo nº {processNumber(process)}
                     </span>
+                    {linkedCadastro(process) && (
+                      <span className="block truncate text-xs text-muted-foreground/80">
+                        Cadastro vinculado: {linkedCadastro(process)}
+                      </span>
+                    )}
                     {(process.autor || process.reu) && (
                       <span className="block truncate text-xs text-muted-foreground/80">
                         {[process.autor, process.reu].filter(Boolean).join(" × ")}

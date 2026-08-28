@@ -123,7 +123,7 @@ function processoNome(
     | null
     | undefined,
 ) {
-  return processo?.clientes?.nome || processo?.autor || "Cliente não informado";
+  return processo?.autor || processo?.clientes?.nome || "Cliente não informado";
 }
 
 function processoPartes(
