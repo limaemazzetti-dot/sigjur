@@ -221,31 +221,31 @@ function PericiasPage() {
           </div>
           <div className="w-full sm:w-auto">
             <Label className="text-xs">Data da perícia</Label>
-            <div className="flex gap-1 rounded-md border p-1 mb-1">
-              <Button
-                type="button"
-                size="sm"
-                variant={dateMode === "single" ? "default" : "ghost"}
-                onClick={() => setDateMode("single")}
-              >
-                Data única
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={dateMode === "range" ? "default" : "ghost"}
-                onClick={() => setDateMode("range")}
-              >
-                Intervalo
-              </Button>
-            </div>
-            <div className="flex gap-1">
+            <div className="flex min-w-0 flex-nowrap items-center gap-1">
+              <div className="flex shrink-0 gap-1 rounded-md border p-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dateMode === "single" ? "default" : "ghost"}
+                  onClick={() => setDateMode("single")}
+                >
+                  Data única
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dateMode === "range" ? "default" : "ghost"}
+                  onClick={() => setDateMode("range")}
+                >
+                  Intervalo
+                </Button>
+              </div>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full sm:w-[270px] justify-start text-left font-normal"
+                    className="min-w-0 flex-1 sm:w-[220px] sm:flex-none justify-start text-left font-normal"
                     title="Filtrar perícias por uma data ou por um intervalo"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
