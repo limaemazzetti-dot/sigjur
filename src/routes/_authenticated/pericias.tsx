@@ -329,6 +329,14 @@ function PericiasPage() {
               const dias = daysUntil(p.data_prazo);
               const vencido = p.status === "aberto" && dias < 0;
               const hoje = p.status === "aberto" && dias === 0;
+              const autorPrincipal =
+                p.processos?.autor?.trim() || p.processos?.clientes?.nome || "—";
+              const cadastroVinculado = p.processos?.clientes?.nome?.trim();
+              const exibeCadastroVinculado =
+                cadastroVinculado &&
+                cadastroVinculado.localeCompare(autorPrincipal, "pt-BR", {
+                  sensitivity: "base",
+                }) !== 0;
               return (
                 <div key={p.id} className="p-4 flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1 flex items-start gap-2">
@@ -372,8 +380,13 @@ function PericiasPage() {
                           title="Abrir este processo"
                         >
                           <p className="text-xs font-medium text-accent truncate">
-                            {p.processos.clientes?.nome ?? p.processos.autor}
+                            {autorPrincipal}
                           </p>
+                          {exibeCadastroVinculado && (
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              Cadastro vinculado: {cadastroVinculado}
+                            </p>
+                          )}
                           {p.processos.numero_cnj && (
                             <p className="text-[11px] text-muted-foreground truncate">
                               Processo nº {p.processos.numero_cnj}
