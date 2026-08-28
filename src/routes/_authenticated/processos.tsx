@@ -167,8 +167,11 @@ function AdvogadosMultiSelect({
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-2">
-        <div className="max-h-56 space-y-1 overflow-y-auto">
+      <PopoverContent
+        align="start"
+        className="w-[min(24rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-2.5"
+      >
+        <div className="max-h-72 space-y-1 overflow-y-auto">
           {options.map((advogado) => {
             const marcado = selecionadosAtivos.some(
               (selecionado) => normalizeName(selecionado) === normalizeName(advogado),
@@ -176,7 +179,7 @@ function AdvogadosMultiSelect({
             return (
               <label
                 key={advogado}
-                className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm hover:bg-accent"
+                className="flex cursor-pointer items-center gap-3 rounded px-3 py-2.5 text-base leading-snug hover:bg-accent"
               >
                 <Checkbox
                   checked={marcado}
@@ -1495,7 +1498,7 @@ function ProcessoForm({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div>
               <Label>Advogado(s)</Label>
               <AdvogadosMultiSelect
