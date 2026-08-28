@@ -26,9 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { CalendarClock, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, CalendarIcon, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchableProcessPicker } from "@/components/searchable-process-picker";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/pericias")({
   validateSearch: (search) => z.object({ editar: z.string().uuid().optional() }).parse(search),
@@ -75,12 +78,25 @@ function daysUntil(iso: string) {
   return Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+function toISO(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function formatFilterDate(d: Date) {
+  return d.toLocaleDateString("pt-BR");
+}
+
 function PericiasPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [statusFilter, setStatusFilter] = useState<"aberto" | "cumprido" | "cancelado" | "todos">(
     "aberto",
   );
+  const [personFilter, setPersonFilter] = useState("");
+  const [dateMode, setDateMode] = useState<"single" | "range">("single");
+  const [singleDate, setSingleDate] = useState<Date | undefined>();
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [editing, setEditing] = useState<PrazoRow | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -106,7 +122,40 @@ function PericiasPage() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Erro ao excluir"),
   });
 
-  const pericias = useMemo(() => list.data ?? [], [list.data]);
+  const pericias = useMemo(() => {
+    const name = personFilter.trim().toLocaleLowerCase("pt-BR");
+    const start = dateMode === "single" ? singleDate : dateRange.from;
+    const end = dateMode === "single" ? singleDate : dateRange.to;
+
+    return (list.data ?? []).filter((p) => {
+      const people = [p.processos?.clientes?.nome, p.processos?.autor, p.processos?.reu]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("pt-BR");
+      const date = p.data_prazo;
+      return (
+        (!name || people.includes(name)) &&
+        (!start || date >= toISO(start)) &&
+        (!end || date <= toISO(end))
+      );
+    });
+  }, [dateMode, dateRange.from, dateRange.to, list.data, personFilter, singleDate]);
+
+  const dateFilterLabel =
+    dateMode === "single"
+      ? singleDate
+        ? formatFilterDate(singleDate)
+        : "Todas as datas"
+      : dateRange.from
+        ? dateRange.to
+          ? `${formatFilterDate(dateRange.from)} — ${formatFilterDate(dateRange.to)}`
+          : `${formatFilterDate(dateRange.from)} — escolher fim`
+        : "Todas as datas";
+
+  function clearDateFilter() {
+    setSingleDate(undefined);
+    setDateRange({});
+  }
 
   function openNew() {
     setEditing(null);
@@ -145,7 +194,100 @@ function PericiasPage() {
             Compromissos registrados em prazos e identificados como perícia.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:items-end">
+          <div className="w-full sm:w-64">
+            <Label className="text-xs">Pessoa do processo</Label>
+            <div className="relative">
+              <Input
+                value={personFilter}
+                onChange={(event) => setPersonFilter(event.target.value)}
+                placeholder="Buscar por cliente, autor ou réu"
+                className="pr-8"
+              />
+              {personFilter && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-9 w-9"
+                  onClick={() => setPersonFilter("")}
+                  aria-label="Limpar busca por pessoa"
+                  title="Limpar busca por pessoa"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="w-full sm:w-auto">
+            <Label className="text-xs">Data da perícia</Label>
+            <div className="flex gap-1 rounded-md border p-1 mb-1">
+              <Button
+                type="button"
+                size="sm"
+                variant={dateMode === "single" ? "default" : "ghost"}
+                onClick={() => setDateMode("single")}
+              >
+                Data única
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={dateMode === "range" ? "default" : "ghost"}
+                onClick={() => setDateMode("range")}
+              >
+                Intervalo
+              </Button>
+            </div>
+            <div className="flex gap-1">
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-[270px] justify-start text-left font-normal"
+                    title="Filtrar perícias por uma data ou por um intervalo"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                    <span className="truncate">{dateFilterLabel}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  {dateMode === "single" ? (
+                    <Calendar
+                      mode="single"
+                      selected={singleDate}
+                      onSelect={(date) => {
+                        setSingleDate(date);
+                        if (date) setCalendarOpen(false);
+                      }}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  ) : (
+                    <Calendar
+                      mode="range"
+                      numberOfMonths={2}
+                      selected={dateRange}
+                      onSelect={(range) => setDateRange(range ?? {})}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  )}
+                </PopoverContent>
+              </Popover>
+              {(singleDate || dateRange.from) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearDateFilter}
+                  aria-label="Limpar filtro de data"
+                  title="Limpar filtro de data"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
           <div className="w-full sm:w-52">
             <Label className="text-xs">Status</Label>
             <Select
@@ -175,7 +317,8 @@ function PericiasPage() {
             <div className="p-6 text-sm text-muted-foreground">Carregando…</div>
           ) : pericias.length === 0 ? (
             <div className="p-6 text-sm text-muted-foreground">
-              Nenhuma perícia encontrada. Clique em <strong>Nova perícia</strong> ou cadastre em{" "}
+              Nenhuma perícia encontrada com os filtros informados. Ajuste ou limpe os filtros,
+              clique em <strong>Nova perícia</strong> ou cadastre em{" "}
               <Link to="/prazos" className="underline underline-offset-2">
                 Agenda
               </Link>{" "}
