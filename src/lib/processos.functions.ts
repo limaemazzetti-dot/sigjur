@@ -120,6 +120,7 @@ export type ProcessoRow = {
   created_at: string;
   updated_at: string;
   clientes?: { id: string; nome: string; tipo: "pf" | "pj" } | null;
+  representantes?: { id: string; nome: string; tipo: "pf" | "pj" } | null;
   indicacoes?: { id: string; nome: string } | null;
 };
 
@@ -152,6 +153,7 @@ function matchesProcessoSearch(processo: ProcessoRow, rawSearch: string) {
   const textString = normalizeSearch(
     [
       processo.clientes?.nome,
+      processo.representantes?.nome,
       processo.autor,
       processo.reu,
       processo.outro_envolvido,
@@ -214,7 +216,7 @@ export const listProcessos = createServerFn({ method: "POST" })
       context.supabase
         .from("processos" as never)
         .select(
-          "*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
+          "*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo), representantes:clientes!processos_representante_id_fkey(id, nome, tipo), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
         ),
       data.order,
     );
@@ -329,7 +331,7 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
       context.supabase
         .from("processos" as never)
         .select(
-          "*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
+          "*, clientes:clientes!processos_cliente_id_fkey(id, nome, tipo), representantes:clientes!processos_representante_id_fkey(id, nome, tipo), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
         ),
       data.order,
     );
@@ -366,7 +368,12 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
       !filter || normalizeSearch(value ?? "").includes(normalizeSearch(filter));
     const processos = allProcessos.filter((p) => {
       if (data.q && !matchesProcessoSearch(p, data.q)) return false;
-      if (!includesText([p.autor, p.clientes?.nome].filter(Boolean).join(" "), data.autor))
+      if (
+        !includesText(
+          [p.autor, p.clientes?.nome, p.representantes?.nome].filter(Boolean).join(" "),
+          data.autor,
+        )
+      )
         return false;
       if (!includesText(p.reu, data.reu)) return false;
       if (data.numero_cnj) {
@@ -439,7 +446,7 @@ export const getProcesso = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase
       .from("processos" as never)
       .select(
-        "*, clientes:clientes!processos_cliente_id_fkey(id, nome, telefone, email), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
+        "*, clientes:clientes!processos_cliente_id_fkey(id, nome, telefone, email), representantes:clientes!processos_representante_id_fkey(id, nome, telefone, email), indicacoes:indicacoes!processos_indicacao_id_fkey(id, nome)",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -448,6 +455,12 @@ export const getProcesso = createServerFn({ method: "POST" })
       ? (normalizeProcessoArea(row as ProcessoRow) as
           | (ProcessoRow & {
               clientes: {
+                id: string;
+                nome: string;
+                telefone: string | null;
+                email: string | null;
+              } | null;
+              representantes: {
                 id: string;
                 nome: string;
                 telefone: string | null;

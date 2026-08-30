@@ -197,13 +197,15 @@ function ProcessoDetalhe() {
             <CardTitle className="font-serif text-xl">Representante</CardTitle>
           </CardHeader>
           <CardContent className="text-sm space-y-2">
-            {p.clientes ? (
+            {p.representantes ? (
               <>
-                <p className="font-medium">{p.clientes.nome}</p>
-                {p.clientes.telefone && (
-                  <p className="text-muted-foreground">Tel.: {p.clientes.telefone}</p>
+                <p className="font-medium">{p.representantes.nome}</p>
+                {p.representantes.telefone && (
+                  <p className="text-muted-foreground">Tel.: {p.representantes.telefone}</p>
                 )}
-                {p.clientes.email && <p className="text-muted-foreground">{p.clientes.email}</p>}
+                {p.representantes.email && (
+                  <p className="text-muted-foreground">{p.representantes.email}</p>
+                )}
                 <Link to="/clientes" className="text-accent text-xs underline">
                   Abrir cadastro
                 </Link>
