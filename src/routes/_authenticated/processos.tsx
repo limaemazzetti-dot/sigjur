@@ -405,7 +405,7 @@ function ProcessosPage() {
         Status: statusLabels[p.status] ?? p.status,
         Matéria: p.materia ?? "",
         Área: p.area ?? p.materia ?? "",
-        Responsável: p.clientes?.nome ?? "",
+        Responsável: p.representantes?.nome ?? p.clientes?.nome ?? "",
         Indicador: p.indicacoes?.nome ?? "",
         Advogado: p.advogado ?? "",
         "Data de entrada": p.data_inicio
@@ -437,8 +437,9 @@ function ProcessosPage() {
       rows: list.data.map((p) => ({
         cnj: p.numero_cnj ?? "—",
         autor:
-          p.clientes?.nome && p.clientes.nome !== p.autor
-            ? `${p.autor} / Responsável: ${p.clientes.nome}`
+          (p.representantes?.nome ?? p.clientes?.nome) &&
+          (p.representantes?.nome ?? p.clientes?.nome) !== p.autor
+            ? `${p.autor} / Responsável: ${p.representantes?.nome ?? p.clientes?.nome}`
             : p.autor,
         reu: p.reu,
         status: statusLabels[p.status] ?? p.status,
@@ -963,9 +964,11 @@ function ProcessosPage() {
                     {list.data.map((p, idx) => {
                       const isAtivo = p.status !== "arquivado" && p.status !== "suspenso";
                       const autorNormalizado = normalizeName(p.autor);
-                      const responsavel = [p.clientes?.nome, p.outro_envolvido].find(
-                        (nome) => nome && normalizeName(nome) !== autorNormalizado,
-                      );
+                      const responsavel = [
+                        p.representantes?.nome,
+                        p.clientes?.nome,
+                        p.outro_envolvido,
+                      ].find((nome) => nome && normalizeName(nome) !== autorNormalizado);
                       return (
                         <tr
                           key={p.id}
