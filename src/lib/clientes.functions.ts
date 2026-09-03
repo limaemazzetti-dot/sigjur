@@ -156,8 +156,11 @@ export const upsertCliente = createServerFn({ method: "POST" })
       data_aniversario: data.data_aniversario || null,
       representante_data_nascimento: data.representante_data_nascimento || null,
       observacoes: cleanObservacoes(data.observacoes),
-      criado_por: context.userId,
     };
+    // `criado_por` é permitido apenas no INSERT pela política de colunas do
+    // Supabase. Enviá-lo em uma edição faz o PostgREST rejeitar o UPDATE com
+    // "permission denied for table clientes".
+    if (!data.id) preferredPayload.criado_por = context.userId;
     // Em edição, campo vazio significa "não alterar". Isso impede que uma
     // credencial seja apagada por acidente e evita devolvê-la ao navegador.
     // A coluna sensível é atualizada abaixo somente com o cliente de serviço,
