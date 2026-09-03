@@ -147,7 +147,9 @@ export const upsertCliente = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, requireEditorAccess])
   .inputValidator((d: unknown) => ClienteInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { senha_gov_br, remover_senha_gov_br, ...persisted } = data;
+    // O identificador é usado apenas para localizar o registro. Nunca deve
+    // seguir no payload, pois a chave primária não é uma coluna editável.
+    const { id, senha_gov_br, remover_senha_gov_br, ...persisted } = data;
     const senhaGovBr = senha_gov_br?.trim();
     const senhaPersistida = senhaGovBr ? await encryptSensitiveValue(senhaGovBr) : undefined;
     const preferredPayload: Record<string, unknown> = {
@@ -160,23 +162,23 @@ export const upsertCliente = createServerFn({ method: "POST" })
     // `criado_por` é permitido apenas no INSERT pela política de colunas do
     // Supabase. Enviá-lo em uma edição faz o PostgREST rejeitar o UPDATE com
     // "permission denied for table clientes".
-    if (!data.id) preferredPayload.criado_por = context.userId;
+    if (!id) preferredPayload.criado_por = context.userId;
     // Em edição, campo vazio significa "não alterar". Isso impede que uma
     // credencial seja apagada por acidente e evita devolvê-la ao navegador.
     // A coluna sensível é atualizada abaixo somente com o cliente de serviço,
     // após as permissões do usuário terem sido verificadas pelo middleware.
-    const shouldUpdateSenha = !data.id || !!senhaPersistida || remover_senha_gov_br === true;
+    const shouldUpdateSenha = !id || !!senhaPersistida || remover_senha_gov_br === true;
     const legacyPayload: Record<string, unknown> = {
       ...preferredPayload,
       observacoes: legacyObservacoes(data.observacoes, data.fornecedor) || null,
     };
     delete legacyPayload.fornecedor;
     let clienteId: string;
-    if (data.id) {
+    if (id) {
       const preferred = await context.supabase
         .from("clientes" as never)
         .update(preferredPayload as never)
-        .eq("id", data.id);
+        .eq("id", id);
       if (preferred.error) {
         if (!missingFornecedorColumn(preferred.error.message)) {
           throw new Error(preferred.error.message);
@@ -184,10 +186,10 @@ export const upsertCliente = createServerFn({ method: "POST" })
         const legacy = await context.supabase
           .from("clientes" as never)
           .update(legacyPayload as never)
-          .eq("id", data.id);
+          .eq("id", id);
         if (legacy.error) throw new Error(legacy.error.message);
       }
-      clienteId = data.id;
+      clienteId = id;
     } else {
       let insertedResult = await context.supabase
         .from("clientes" as never)
