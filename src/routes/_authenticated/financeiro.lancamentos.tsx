@@ -452,31 +452,34 @@ function LancamentosPage() {
       </header>
 
       <Card className="shrink-0 border-border/60">
-        <CardHeader className="px-4 pt-4 pb-2">
+        <CardHeader className="px-4 pt-4 pb-2 xl:hidden">
           <CardTitle className="text-sm font-sans uppercase tracking-wide text-muted-foreground">
             Filtros
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <div className="sm:col-span-2 xl:col-span-1">
-              <Label className="text-xs">Buscar cliente, fornecedor ou processo</Label>
+        <CardContent className="px-4 pb-4 xl:flex xl:items-end xl:gap-3 xl:pt-4">
+          <div className="hidden shrink-0 pb-2 text-sm font-sans uppercase tracking-wide text-muted-foreground xl:block">
+            Filtros
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:min-w-0 xl:flex-1 xl:flex-nowrap xl:items-end">
+            <div className="sm:col-span-2 xl:min-w-0 xl:flex-[2]">
+              <Label className="text-xs whitespace-nowrap">Buscar cliente, fornecedor ou processo</Label>
               <Input
                 value={search.q ?? ""}
                 onChange={(e) => updateSearch({ q: e.target.value || undefined })}
                 placeholder="Nome, fornecedor, parte, descrição ou CNJ"
               />
             </div>
-            <div>
-              <Label className="text-xs">Ano</Label>
+            <div className="xl:min-w-0 xl:flex-1">
+              <Label className="text-xs whitespace-nowrap">Ano</Label>
               <Input
                 type="number"
                 value={ano}
                 onChange={(e) => updateSearch({ ano: Number(e.target.value) || undefined })}
               />
             </div>
-            <div>
-              <Label className="text-xs">Mês</Label>
+            <div className="xl:min-w-0 xl:flex-1">
+              <Label className="text-xs whitespace-nowrap">Mês</Label>
               <Select
                 value={mes ? String(mes) : "all"}
                 onValueChange={(v) => updateSearch({ mes: v === "all" ? undefined : Number(v) })}
@@ -494,8 +497,8 @@ function LancamentosPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs">Categoria</Label>
+            <div className="xl:min-w-0 xl:flex-1">
+              <Label className="text-xs whitespace-nowrap">Categoria</Label>
               <Select
                 value={search.categoria ?? "all"}
                 onValueChange={(v) => updateSearch({ categoria: v === "all" ? undefined : v })}
@@ -513,8 +516,8 @@ function LancamentosPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs">Tipo</Label>
+            <div className="xl:min-w-0 xl:flex-1">
+              <Label className="text-xs whitespace-nowrap">Tipo</Label>
               <Select
                 value={search.tipo ?? "all"}
                 onValueChange={(v) =>
@@ -531,8 +534,8 @@ function LancamentosPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs">Status</Label>
+            <div className="xl:min-w-0 xl:flex-1">
+              <Label className="text-xs whitespace-nowrap">Status</Label>
               <Select
                 value={search.status ?? "all"}
                 onValueChange={(v) =>
