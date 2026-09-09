@@ -403,7 +403,7 @@ function ProcessosPage() {
         Autor: p.autor,
         Réu: p.reu,
         Status: statusLabels[p.status] ?? p.status,
-        Matéria: p.materia ?? "",
+        "Tipo de ação": p.tipo_acao ?? "",
         Área: p.area ?? p.materia ?? "",
         Responsável: p.representantes?.nome ?? p.clientes?.nome ?? "",
         Indicador: p.indicacoes?.nome ?? "",
@@ -428,7 +428,7 @@ function ProcessosPage() {
         { header: "Autor / Responsável", dataKey: "autor" },
         { header: "Réu", dataKey: "reu" },
         { header: "Status", dataKey: "status" },
-        { header: "Matéria", dataKey: "materia" },
+        { header: "Tipo de ação", dataKey: "tipoAcao" },
         { header: "Área", dataKey: "area" },
         { header: "Data de entrada", dataKey: "entrada" },
         { header: "Indicador", dataKey: "indicacao" },
@@ -443,12 +443,13 @@ function ProcessosPage() {
             : p.autor,
         reu: p.reu,
         status: statusLabels[p.status] ?? p.status,
-        materia: p.materia ?? "—",
+        tipoAcao: p.tipo_acao ?? "—",
         area: p.area ?? p.materia ?? "—",
         entrada: p.data_inicio
           ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
           : "—",
         indicacao: p.indicacoes?.nome ?? "—",
+        advogado: p.advogado ?? "—",
       })),
       footerNote: `Gerado em ${new Date().toLocaleString("pt-BR")}`,
     });
