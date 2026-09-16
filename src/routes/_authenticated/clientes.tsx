@@ -88,9 +88,13 @@ function ClientesPage() {
     onSuccess: () => {
       toast.success("Removido");
       qc.invalidateQueries({ queryKey: ["clientes"] });
+      qc.invalidateQueries({ queryKey: ["clientes-select"] });
+      qc.invalidateQueries({ queryKey: ["fornecedores"] });
+      qc.invalidateQueries({ queryKey: ["processos-resumo"] });
       qc.invalidateQueries({ queryKey: ["agenda-proxima"] });
       autoSync(["clientes", "painel"]);
     },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   function handleExportExcel() {
