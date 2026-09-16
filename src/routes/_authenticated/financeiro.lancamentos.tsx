@@ -463,7 +463,9 @@ function LancamentosPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:min-w-0 xl:flex-1 xl:flex-nowrap xl:items-end">
             <div className="sm:col-span-2 xl:min-w-0 xl:flex-[2]">
-              <Label className="text-xs whitespace-nowrap">Buscar cliente, fornecedor ou processo</Label>
+              <Label className="text-xs whitespace-nowrap">
+                Buscar cliente, fornecedor ou processo
+              </Label>
               <Input
                 value={search.q ?? ""}
                 onChange={(e) => updateSearch({ q: e.target.value || undefined })}
