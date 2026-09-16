@@ -269,11 +269,20 @@ export const deleteCliente = createServerFn({ method: "POST" })
       .eq("representante_id", data.id);
     if (representanteError) throw new Error(representanteError.message);
 
-    const { count: lancamentos, error: lancamentoError } = await supabaseAdmin
+    let { count: lancamentos, error: lancamentoError } = await supabaseAdmin
       .from("lancamentos" as never)
       .select("id", { count: "exact", head: true })
       .eq("fornecedor_id", data.id);
-    if (lancamentoError) throw new Error(lancamentoError.message);
+    // A migração relacional de fornecedores ainda não está aplicada em alguns
+    // ambientes. Nesse caso não há coluna para consultar; a exclusão continua
+    // segura porque a FK simplesmente ainda não existe nesse banco.
+    if (lancamentoError && !missingFornecedorColumn(lancamentoError.message)) {
+      throw new Error(lancamentoError.message);
+    }
+    if (lancamentoError) {
+      lancamentos = 0;
+      lancamentoError = null;
+    }
 
     const { count: vinculos, error: vinculoError } = await supabaseAdmin
       .from("cliente_vinculos" as never)
