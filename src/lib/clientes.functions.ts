@@ -251,60 +251,6 @@ export const deleteCliente = createServerFn({ method: "POST" })
     // somente nesta operação destrutiva para não depender de uma política RLS
     // antiga que possa fazer o DELETE retornar zero linhas sem erro.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count: processosComoCliente, error: processoError } = await supabaseAdmin
-      .from("processos" as never)
-      .select("id", { count: "exact", head: true })
-      .eq("cliente_id", data.id);
-    if (processoError) throw new Error(processoError.message);
-
-    const { count: processosComoEnvolvido, error: envolvidoError } = await supabaseAdmin
-      .from("processos" as never)
-      .select("id", { count: "exact", head: true })
-      .eq("outro_envolvido_cliente_id", data.id);
-    if (envolvidoError) throw new Error(envolvidoError.message);
-
-    const { count: processosComoRepresentante, error: representanteError } = await supabaseAdmin
-      .from("processos" as never)
-      .select("id", { count: "exact", head: true })
-      .eq("representante_id", data.id);
-    if (representanteError) throw new Error(representanteError.message);
-
-    let { count: lancamentos, error: lancamentoError } = await supabaseAdmin
-      .from("lancamentos" as never)
-      .select("id", { count: "exact", head: true })
-      .eq("fornecedor_id", data.id);
-    // A migração relacional de fornecedores ainda não está aplicada em alguns
-    // ambientes. Nesse caso não há coluna para consultar; a exclusão continua
-    // segura porque a FK simplesmente ainda não existe nesse banco.
-    if (lancamentoError && !missingFornecedorColumn(lancamentoError.message)) {
-      throw new Error(lancamentoError.message);
-    }
-    if (lancamentoError) {
-      lancamentos = 0;
-      lancamentoError = null;
-    }
-
-    const { count: vinculos, error: vinculoError } = await supabaseAdmin
-      .from("cliente_vinculos" as never)
-      .select("id", { count: "exact", head: true })
-      .or(`cliente_principal_id.eq.${data.id},cliente_vinculado_id.eq.${data.id}`);
-    if (vinculoError) throw new Error(vinculoError.message);
-
-    const processosVinculados =
-      (processosComoCliente ?? 0) +
-      (processosComoEnvolvido ?? 0) +
-      (processosComoRepresentante ?? 0);
-    const lancamentosVinculados = lancamentos ?? 0;
-    if (processosVinculados || lancamentosVinculados || vinculos) {
-      const partes = [
-        processosVinculados && `${processosVinculados} processo(s)`,
-        lancamentosVinculados && `${lancamentosVinculados} lançamento(s) financeiro(s)`,
-        vinculos && `${vinculos} vínculo(s) entre clientes`,
-      ].filter(Boolean);
-      throw new Error(
-        `Este cadastro possui ${partes.join(" e ")} vinculado(s). Reatribua os registros antes de excluí-lo para preservar o histórico.`,
-      );
-    }
     const { data: deleted, error } = await supabaseAdmin
       .from("clientes" as never)
       .delete()

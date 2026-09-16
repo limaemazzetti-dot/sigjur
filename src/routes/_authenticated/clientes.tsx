@@ -94,7 +94,13 @@ function ClientesPage() {
       qc.invalidateQueries({ queryKey: ["agenda-proxima"] });
       autoSync(["clientes", "painel"]);
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "Não foi possível remover o cliente. Atualize a página e tente novamente.";
+      toast.error(message);
+    },
   });
 
   function handleExportExcel() {
