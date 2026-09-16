@@ -1402,6 +1402,12 @@ function ProcessoForm({
                 />
               </div>
             </div>
+            {prazosVinculados.isError && (
+              <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                Não foi possível carregar os eventos deste processo. Atualize a página para tentar
+                novamente; o indicador geral de prazo pode ficar indisponível enquanto isso.
+              </p>
+            )}
             {eventosAbertos.length > 0 && (
               <div className="space-y-2 border-t border-border/60 pt-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

@@ -428,12 +428,19 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
 export const listProcessoFilterOptions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("processos" as never).select("tipo_acao");
+    // Filtros devem refletir exclusivamente o catálogo ativo. Valores antigos
+    // continuam visíveis no processo histórico, mas não podem reaparecer como
+    // opções selecionáveis depois de desativados no Cadastro.
+    const { data, error } = await context.supabase
+      .from("catalogo_opcoes" as never)
+      .select("valor")
+      .eq("categoria", "tipo_acao")
+      .eq("ativo", true);
     if (error) throw new Error(error.message);
     return Array.from(
       new Set(
-        ((data ?? []) as Array<{ tipo_acao: string | null }>)
-          .map((row) => row.tipo_acao?.trim())
+        ((data ?? []) as Array<{ valor: string | null }>)
+          .map((row) => row.valor?.trim())
           .filter((value): value is string => Boolean(value)),
       ),
     ).sort((a, b) => a.localeCompare(b, "pt-BR"));

@@ -128,38 +128,6 @@ export const deleteCatalogo = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const importCatalogoFromProcessos = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth, requireEditorAccess])
-  .handler(async ({ context }) => {
-    const { data: processos, error } = await context.supabase
-      .from("processos" as never)
-      .select("tipo_acao, materia, fase, advogado, origem");
-    if (error) throw new Error(error.message);
-
-    const rows: Array<{ categoria: Categoria; valor: string; ativo: boolean }> = [];
-    const seen = new Set<string>();
-    for (const processo of (processos ?? []) as Array<Record<Categoria, string | null>>) {
-      for (const categoria of CATEGORIAS) {
-        const valor = processo[categoria]?.trim();
-        if (!valor) continue;
-        const key = `${categoria}:${valor.toLocaleLowerCase("pt-BR")}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        rows.push({ categoria, valor, ativo: true });
-      }
-    }
-
-    if (!rows.length) return { imported: 0 };
-    const { error: upsertError } = await context.supabase
-      .from("catalogo_opcoes" as never)
-      .upsert(rows as never, {
-        onConflict: "categoria,valor",
-        ignoreDuplicates: true,
-      });
-    if (upsertError) throw new Error(upsertError.message);
-    return { imported: rows.length };
-  });
-
 // ---------- Vínculos entre clientes ----------
 
 export type ClienteVinculo = {
