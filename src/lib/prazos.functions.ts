@@ -33,6 +33,8 @@ export type PrazoRow = {
     id: string;
     autor: string;
     reu: string;
+    autores?: string[];
+    reus?: string[];
     numero_cnj: string | null;
     clientes?: { nome: string } | null;
   } | null;
@@ -54,7 +56,7 @@ export const listPrazos = createServerFn({ method: "POST" })
     let q = context.supabase
       .from("prazos" as never)
       .select(
-        "*, processos(id, autor, reu, numero_cnj, clientes:clientes!processos_cliente_id_fkey(nome))",
+        "*, processos(id, autor, reu, autores, reus, numero_cnj, clientes:clientes!processos_cliente_id_fkey(nome))",
       )
       .order("data_prazo", { ascending: true });
     if (data.status) q = q.eq("status", data.status);

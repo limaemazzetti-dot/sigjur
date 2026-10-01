@@ -32,6 +32,7 @@ import { SearchableProcessPicker } from "@/components/searchable-process-picker"
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 
 export const Route = createFileRoute("/_authenticated/pericias")({
   validateSearch: (search) => z.object({ editar: z.string().uuid().optional() }).parse(search),
@@ -128,7 +129,12 @@ function PericiasPage() {
     const end = dateMode === "single" ? singleDate : dateRange.to;
 
     return (list.data ?? []).filter((p) => {
-      const people = [p.processos?.clientes?.nome, p.processos?.autor, p.processos?.reu]
+      const partes = p.processos ? normalizeProcessoPartes(p.processos) : null;
+      const people = [
+        p.processos?.clientes?.nome,
+        ...(partes?.autores ?? []),
+        ...(partes?.reus ?? []),
+      ]
         .filter(Boolean)
         .join(" ")
         .toLocaleLowerCase("pt-BR");
@@ -329,8 +335,9 @@ function PericiasPage() {
               const dias = daysUntil(p.data_prazo);
               const vencido = p.status === "aberto" && dias < 0;
               const hoje = p.status === "aberto" && dias === 0;
+              const partes = p.processos ? normalizeProcessoPartes(p.processos) : null;
               const autorPrincipal =
-                p.processos?.autor?.trim() || p.processos?.clientes?.nome || "—";
+                partes?.autores.join(", ") || p.processos?.clientes?.nome || "—";
               const cadastroVinculado = p.processos?.clientes?.nome?.trim();
               const exibeCadastroVinculado =
                 cadastroVinculado &&

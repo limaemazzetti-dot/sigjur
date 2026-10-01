@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Check, RotateCcw, AlarmClock, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 import { exportToPdf } from "@/lib/export";
 import { SearchableProcessPicker } from "@/components/searchable-process-picker";
 
@@ -173,7 +174,11 @@ function PrazosPage() {
           data: formatDateBR(p.data_prazo),
           detalhes: p.descricao ? `${p.titulo}\n${p.descricao}` : p.titulo,
           tipo: isPericia ? "Perícia" : isAudiencia ? "Audiência" : "Prazo",
-          cliente: p.processos?.autor ?? p.processos?.clientes?.nome ?? "Não informado",
+          cliente: p.processos
+            ? normalizeProcessoPartes(p.processos).autores.join(", ") ||
+              p.processos.clientes?.nome ||
+              "Não informado"
+            : "Não informado",
           processo: p.processos?.numero_cnj ?? "Não informado",
           prioridade: PRIO_LABEL[p.prioridade],
           status: STATUS_LABEL[p.status],
@@ -213,7 +218,7 @@ function PrazosPage() {
                 initial={editing ?? undefined}
                 processos={(processos.data ?? []).map((p) => ({
                   id: p.id,
-                  label: `${p.autor} × ${p.reu}${p.numero_cnj ? " — " + p.numero_cnj : ""}${p.clientes?.nome && p.clientes.nome !== p.autor ? ` — Cadastro vinculado: ${p.clientes.nome}` : ""}`,
+                  label: `${normalizeProcessoPartes(p).autores.join(", ")} × ${normalizeProcessoPartes(p).reus.join(", ")}${p.numero_cnj ? " — " + p.numero_cnj : ""}${p.clientes?.nome && p.clientes.nome !== p.autor ? ` — Cadastro vinculado: ${p.clientes.nome}` : ""}`,
                   cliente: p.clientes?.nome ?? null,
                   numero_cnj: p.numero_cnj,
                 }))}
@@ -363,7 +368,8 @@ function PrazosPage() {
                           {p.processos ? (
                             <div className="space-y-0.5">
                               <p className="text-foreground">
-                                {p.processos.autor} × {p.processos.reu}
+                                {normalizeProcessoPartes(p.processos).autores.join(", ")} ×{" "}
+                                {normalizeProcessoPartes(p.processos).reus.join(", ")}
                               </p>
                               {p.processos.numero_cnj && <p>Nº {p.processos.numero_cnj}</p>}
                               {p.processos.clientes?.nome &&

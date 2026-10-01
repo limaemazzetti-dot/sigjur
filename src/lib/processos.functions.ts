@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireEditorAccess } from "@/integrations/supabase/access-middleware";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 
 export const STATUS_PROCESSO = [
   "inicial",
@@ -156,6 +157,8 @@ function matchesProcessoSearch(processo: ProcessoRow, rawSearch: string) {
       processo.representantes?.nome,
       processo.autor,
       processo.reu,
+      ...(processo.autores ?? []),
+      ...(processo.reus ?? []),
       processo.outro_envolvido,
       processo.numero_cnj,
       processo.tipo_acao,
@@ -227,7 +230,9 @@ export const listProcessos = createServerFn({ method: "POST" })
     if (data.advogado) q = q.ilike("advogado", `%${data.advogado}%`);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const baseProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
+    const baseProcessos = ((rows ?? []) as ProcessoRow[])
+      .map((row) => ({ ...row, ...normalizeProcessoPartes(row) }))
+      .map(normalizeProcessoArea);
     const ids = baseProcessos.map((processo) => processo.id);
     const { data: eventosAbertos, error: eventosError } = ids.length
       ? await context.supabase
@@ -250,6 +255,18 @@ export const listProcessos = createServerFn({ method: "POST" })
         prazo_em_aberto: !!processo.data_prazo || processosComEventoAberto.has(processo.id),
       }))
       .filter((processo) => {
+        const autorText = normalizeSearch([processo.autor, ...(processo.autores ?? [])].join(" "));
+        const reuText = normalizeSearch([processo.reu, ...(processo.reus ?? [])].join(" "));
+        if (data.autor && !autorText.includes(normalizeSearch(data.autor))) return false;
+        if (data.reu && !reuText.includes(normalizeSearch(data.reu))) return false;
+        if (data.numero_cnj && !(processo.numero_cnj ?? "").includes(data.numero_cnj)) return false;
+        if (
+          data.area &&
+          !normalizeSearch(processo.area ?? processo.materia ?? "").includes(
+            normalizeSearch(data.area),
+          )
+        )
+          return false;
         if (data.prazo_em_aberto !== undefined && processo.prazo_em_aberto !== data.prazo_em_aberto)
           return false;
         return !data.q || matchesProcessoSearch(processo, data.q);
@@ -343,7 +360,9 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
     if (data.data_inicio_ate) q = q.lte("data_inicio", data.data_inicio_ate);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const baseProcessos = ((rows ?? []) as ProcessoRow[]).map(normalizeProcessoArea);
+    const baseProcessos = ((rows ?? []) as ProcessoRow[])
+      .map((row) => ({ ...row, ...normalizeProcessoPartes(row) }))
+      .map(normalizeProcessoArea);
     const idsComPrazo = baseProcessos.map((processo) => processo.id);
     const { data: prazosAbertos, error: prazoError } = idsComPrazo.length
       ? await context.supabase
@@ -370,12 +389,21 @@ export const listProcessosResumo = createServerFn({ method: "POST" })
       if (data.q && !matchesProcessoSearch(p, data.q)) return false;
       if (
         !includesText(
-          [p.autor, p.clientes?.nome, p.representantes?.nome].filter(Boolean).join(" "),
+          [
+            p.autor,
+            p.reu,
+            ...(p.autores ?? []),
+            ...(p.reus ?? []),
+            p.clientes?.nome,
+            p.representantes?.nome,
+          ]
+            .filter(Boolean)
+            .join(" "),
           data.autor,
         )
       )
         return false;
-      if (!includesText(p.reu, data.reu)) return false;
+      if (!includesText([p.reu, ...(p.reus ?? [])].join(" "), data.reu)) return false;
       if (data.numero_cnj) {
         const wanted = data.numero_cnj.replace(/\D/g, "");
         if (!(p.numero_cnj ?? "").replace(/\D/g, "").includes(wanted)) return false;
@@ -459,7 +487,10 @@ export const getProcesso = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     return row
-      ? (normalizeProcessoArea(row as ProcessoRow) as
+      ? ({
+          ...normalizeProcessoArea(row as ProcessoRow),
+          ...normalizeProcessoPartes(row as ProcessoRow),
+        } as
           | (ProcessoRow & {
               clientes: {
                 id: string;

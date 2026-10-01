@@ -32,6 +32,7 @@ import { useAutoSync } from "@/lib/use-auto-sync";
 import { listStatusProcesso } from "@/lib/status-processo.functions";
 import { CurrencyInput } from "@/components/currency-input";
 import { listIndicacoes, type IndicacaoRow } from "@/lib/indicacoes.functions";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 
 export const Route = createFileRoute("/_authenticated/processos/$id")({
   component: ProcessoDetalhe,
@@ -153,7 +154,9 @@ function ProcessoDetalhe() {
           {p.numero_cnj ?? "Sem CNJ"}
         </p>
         <h1 className="font-serif text-3xl mt-1">
-          {p.autor} <span className="text-muted-foreground">×</span> {p.reu}
+          {normalizeProcessoPartes(p).autores.join(", ")}{" "}
+          <span className="text-muted-foreground">×</span>{" "}
+          {normalizeProcessoPartes(p).reus.join(", ")}
         </h1>
         <p className="text-sm mt-1">
           <span className="inline-block px-2 py-0.5 rounded bg-secondary">
@@ -399,6 +402,8 @@ function ProcessoEdit({
     numero_cnj: string | null;
     autor: string;
     reu: string;
+    autores?: string[];
+    reus?: string[];
     status: string;
     materia: string | null;
     vara: string | null;
@@ -418,6 +423,8 @@ function ProcessoEdit({
     numero_cnj: initial.numero_cnj ?? "",
     autor: initial.autor,
     reu: initial.reu,
+    autores: initial.autores?.length ? initial.autores : [initial.autor],
+    reus: initial.reus?.length ? initial.reus : [initial.reu],
     status: initial.status,
     materia: initial.materia ?? "",
     vara: initial.vara ?? "",
@@ -442,7 +449,13 @@ function ProcessoEdit({
       className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault();
-        onSave(f);
+        onSave({
+          ...f,
+          autor: f.autores?.[0] ?? f.autor,
+          reu: f.reus?.[0] ?? f.reu,
+          autores: f.autores?.map((item) => item.trim()).filter(Boolean),
+          reus: f.reus?.map((item) => item.trim()).filter(Boolean),
+        });
       }}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -451,12 +464,20 @@ function ProcessoEdit({
           <Input value={f.numero_cnj ?? ""} onChange={(e) => set("numero_cnj", e.target.value)} />
         </div>
         <div>
-          <Label>Autor</Label>
-          <Input required value={f.autor} onChange={(e) => set("autor", e.target.value)} />
+          <Label>Autores (separados por vírgula)</Label>
+          <Input
+            required
+            value={(f.autores ?? [f.autor]).join(", ")}
+            onChange={(e) => set("autores", e.target.value.split(","))}
+          />
         </div>
         <div>
-          <Label>Réu</Label>
-          <Input required value={f.reu} onChange={(e) => set("reu", e.target.value)} />
+          <Label>Réus (separados por vírgula)</Label>
+          <Input
+            required
+            value={(f.reus ?? [f.reu]).join(", ")}
+            onChange={(e) => set("reus", e.target.value.split(","))}
+          />
         </div>
         <div>
           <Label>Status</Label>
