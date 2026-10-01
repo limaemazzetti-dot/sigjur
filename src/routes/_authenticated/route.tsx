@@ -26,9 +26,16 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const location = useLocation();
   const meFn = useServerFn(getMe);
-  const { data: me, isLoading } = useQuery({
+  const {
+    data: me,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["me"],
     queryFn: () => meFn(),
+    retry: 1,
   });
   const readOnly = me?.accessLevel === "viewer";
   const currentPage = ALL_PAGES.find(
@@ -119,6 +126,28 @@ function AuthenticatedLayout() {
                 {isLoading ? (
                   <div className="grid h-full place-items-center text-sm text-muted-foreground">
                     Verificando acesso…
+                  </div>
+                ) : isError ? (
+                  <div className="grid h-full place-items-center p-8 text-center">
+                    <div className="max-w-md">
+                      <h1 className="font-serif text-2xl">Não foi possível verificar o acesso</h1>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        A sessão ou a conexão com o servidor não respondeu. Tente novamente antes de
+                        sair da plataforma.
+                      </p>
+                      {error instanceof Error && (
+                        <p className="mt-2 break-words text-xs text-destructive/80">
+                          {error.message}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        className="mt-4 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+                        onClick={() => void refetch()}
+                      >
+                        Tentar novamente
+                      </button>
+                    </div>
                   </div>
                 ) : pageAllowed ? (
                   <Outlet />

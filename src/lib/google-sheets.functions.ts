@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 import { requireEditorAccess } from "@/integrations/supabase/access-middleware";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -290,8 +291,8 @@ async function buildValuesFor(
       ],
       ...list.map((p) => [
         (p.numero_cnj as string) ?? "",
-        (p.autor as string) ?? "",
-        (p.reu as string) ?? "",
+        normalizeProcessoPartes(p).autores.join(", "),
+        normalizeProcessoPartes(p).reus.join(", "),
         (p.status as string) ?? "",
         (p.materia as string) ?? "",
         (p.vara as string) ?? "",

@@ -8,7 +8,6 @@ import {
   listVinculos,
   addVinculo,
   deleteVinculo,
-  importCatalogoFromProcessos,
   CATEGORIAS,
   CATEGORIA_LABEL,
   type Categoria,
@@ -21,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SearchableClientPicker } from "@/components/searchable-client-picker";
-import { Database, Link2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { Link2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   addStatusProcesso,
@@ -51,15 +50,6 @@ export function CadastrosPage() {
     queryFn: () => getMe(),
   });
   const canEdit = me.data?.canEdit ?? false;
-  const mImport = useMutation({
-    mutationFn: () => importCatalogoFromProcessos(),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["catalogo"] });
-      toast.success("Opções já usadas nos processos foram sincronizadas");
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
   return (
     <div className="sigjur-page space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -70,15 +60,6 @@ export function CadastrosPage() {
             Gerencie as opções dos formulários, as indicações e os vínculos entre clientes.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!canEdit || mImport.isPending}
-          onClick={() => mImport.mutate()}
-        >
-          <Database className="mr-2 size-4" />
-          {mImport.isPending ? "Sincronizando..." : "Importar opções dos processos"}
-        </Button>
       </header>
 
       {!me.isPending && !canEdit && (

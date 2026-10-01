@@ -69,6 +69,7 @@ export async function exportToPdf(opts: {
   orientation?: "portrait" | "landscape";
   columns: PdfColumn[];
   rows: Record<string, unknown>[];
+  noWrapDataKeys?: string[];
   footerNote?: string;
 }) {
   const doc = new jsPDF({ orientation: opts.orientation ?? "portrait", unit: "pt", format: "a4" });
@@ -103,7 +104,15 @@ export async function exportToPdf(opts: {
     startY: 176,
     head: [opts.columns.map((c) => c.header)],
     body: opts.rows.map((r) => opts.columns.map((c) => String(r[c.dataKey] ?? ""))),
-    styles: { fontSize: 9, cellPadding: 5 },
+    styles: { fontSize: 9, cellPadding: 5, overflow: "ellipsize" },
+    columnStyles: Object.fromEntries(
+      (opts.noWrapDataKeys ?? [])
+        .map((key) => [
+          opts.columns.findIndex((column) => column.dataKey === key),
+          { overflow: "ellipsize" },
+        ])
+        .filter(([index]) => Number(index) >= 0),
+    ),
     headStyles: { fillColor: [11, 11, 12], textColor: [228, 206, 154], lineColor: [200, 169, 106] },
     alternateRowStyles: { fillColor: [248, 246, 240] },
     margin: { left: 40, right: 40 },

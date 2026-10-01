@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { listPrazos, upsertPrazo, type PrazoRow } from "@/lib/prazos.functions";
 import { listProcessos, setProcessoIndicacao } from "@/lib/processos.functions";
 import { listIndicacoes } from "@/lib/indicacoes.functions";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,8 +71,16 @@ function cleanDescricao(descricao: string | null | undefined) {
   return (descricao ?? "").replace(HORARIO_PREFIX, "").trim();
 }
 
-function processClientName(processo: { clientes?: { nome: string } | null; autor: string }) {
-  return processo.autor || processo.clientes?.nome || "Cliente não informado";
+function processClientName(processo: {
+  clientes?: { nome: string } | null;
+  autor: string;
+  autores?: unknown;
+}) {
+  return (
+    normalizeProcessoPartes(processo).autores[0] ||
+    processo.clientes?.nome ||
+    "Cliente não informado"
+  );
 }
 
 function AudienciasPage() {
@@ -179,9 +188,10 @@ function AudienciasPage() {
                           to="/processos/$id"
                           params={{ id: p.processos.id }}
                           className="text-xs text-accent hover:underline block truncate"
-                          title={`${p.processos.autor} × ${p.processos.reu}`}
+                          title={`${normalizeProcessoPartes(p.processos).autores.join(", ")} × ${normalizeProcessoPartes(p.processos).reus.join(", ")}`}
                         >
-                          {p.processos.autor} × {p.processos.reu}
+                          {normalizeProcessoPartes(p.processos).autores.join(", ")} ×{" "}
+                          {normalizeProcessoPartes(p.processos).reus.join(", ")}
                         </Link>
                         {p.processos.numero_cnj && (
                           <p className="text-xs text-muted-foreground truncate">
@@ -409,7 +419,9 @@ function AudienciaDialog({
                   <p className="text-xs text-muted-foreground mt-1">
                     Cliente: {processClientName(proc)} · Processo: {proc.numero_cnj ?? "sem número"}
                     <br />
-                    Autor: {proc.autor || "não informado"} · Réu: {proc.reu || "não informado"}
+                    Autor(es): {normalizeProcessoPartes(proc).autores.join(", ") ||
+                      "não informado"}{" "}
+                    · Réu(s): {normalizeProcessoPartes(proc).reus.join(", ") || "não informado"}
                   </p>
                 );
               })()}

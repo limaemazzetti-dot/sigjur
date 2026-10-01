@@ -103,7 +103,7 @@ export const listLancamentos = createServerFn({ method: "POST" })
     let q = context.supabase
       .from("lancamentos")
       .select(
-        "*, plano_contas(id, codigo, nome, tipo), processos(id, numero_cnj, autor, reu, clientes:clientes!processos_cliente_id_fkey(id, nome))",
+        "*, plano_contas(id, codigo, nome, tipo), processos(id, numero_cnj, autor, reu, autores, reus, clientes:clientes!processos_cliente_id_fkey(id, nome))",
       )
       .order("data", { ascending: true });
     const range = monthRange(data.ano, data.mes);
@@ -167,6 +167,8 @@ export const listLancamentos = createServerFn({ method: "POST" })
         numero_cnj?: string | null;
         autor?: string | null;
         reu?: string | null;
+        autores?: unknown;
+        reus?: unknown;
         clientes?: { nome?: string | null } | null;
       } | null;
       const fornecedor = row.fornecedores as {
@@ -181,6 +183,8 @@ export const listLancamentos = createServerFn({ method: "POST" })
         processo?.numero_cnj,
         processo?.autor,
         processo?.reu,
+        ...(Array.isArray(processo?.autores) ? processo.autores : []),
+        ...(Array.isArray(processo?.reus) ? processo.reus : []),
         processo?.clientes?.nome,
         fornecedor?.nome,
         fornecedor?.cpf_cnpj,

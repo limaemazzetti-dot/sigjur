@@ -12,6 +12,7 @@ import {
   type ProcessoResumoRow,
 } from "@/lib/processos.functions";
 import { listClientes, type ClienteRow } from "@/lib/clientes.functions";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 import { listCatalogo, listVinculos } from "@/lib/catalogos.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -398,20 +399,23 @@ function ProcessosPage() {
     if (!list.data) return;
     exportToExcel(
       "processos",
-      list.data.map((p) => ({
-        "Nº CNJ": p.numero_cnj ?? "",
-        Autor: p.autor,
-        Réu: p.reu,
-        Status: statusLabels[p.status] ?? p.status,
-        "Tipo de ação": p.tipo_acao ?? "",
-        Área: p.area ?? p.materia ?? "",
-        Responsável: p.representantes?.nome ?? p.clientes?.nome ?? "",
-        Indicador: p.indicacoes?.nome ?? "",
-        Advogado: p.advogado ?? "",
-        "Data de entrada": p.data_inicio
-          ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
-          : "",
-      })),
+      list.data.map((p) => {
+        const partes = normalizeProcessoPartes(p);
+        return {
+          "Nº CNJ": p.numero_cnj ?? "",
+          Autor: partes.autores.join(", "),
+          Réu: partes.reus.join(", "),
+          Status: statusLabels[p.status] ?? p.status,
+          "Tipo de ação": p.tipo_acao ?? "",
+          Área: p.area ?? p.materia ?? "",
+          Responsável: p.representantes?.nome ?? p.clientes?.nome ?? "",
+          Indicador: p.indicacoes?.nome ?? "",
+          Advogado: p.advogado ?? "",
+          "Data de entrada": p.data_inicio
+            ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
+            : "",
+        };
+      }),
     );
   }
   function handleExportPdf() {
@@ -434,23 +438,26 @@ function ProcessosPage() {
         { header: "Indicador", dataKey: "indicacao" },
         { header: "Advogado", dataKey: "advogado" },
       ],
-      rows: list.data.map((p) => ({
-        cnj: p.numero_cnj ?? "—",
-        autor:
-          (p.representantes?.nome ?? p.clientes?.nome) &&
-          (p.representantes?.nome ?? p.clientes?.nome) !== p.autor
-            ? `${p.autor} / Responsável: ${p.representantes?.nome ?? p.clientes?.nome}`
-            : p.autor,
-        reu: p.reu,
-        status: statusLabels[p.status] ?? p.status,
-        tipoAcao: p.tipo_acao ?? "—",
-        area: p.area ?? p.materia ?? "—",
-        entrada: p.data_inicio
-          ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
-          : "—",
-        indicacao: p.indicacoes?.nome ?? "—",
-        advogado: p.advogado ?? "—",
-      })),
+      rows: list.data.map((p) => {
+        const partes = normalizeProcessoPartes(p);
+        return {
+          cnj: p.numero_cnj ?? "—",
+          autor:
+            (p.representantes?.nome ?? p.clientes?.nome) &&
+            (p.representantes?.nome ?? p.clientes?.nome) !== p.autor
+              ? `${partes.autores.join(", ")} / Responsável: ${p.representantes?.nome ?? p.clientes?.nome}`
+              : partes.autores.join(", "),
+          reu: partes.reus.join(", "),
+          status: statusLabels[p.status] ?? p.status,
+          tipoAcao: p.tipo_acao ?? "—",
+          area: p.area ?? p.materia ?? "—",
+          entrada: p.data_inicio
+            ? new Date(p.data_inicio + "T00:00:00").toLocaleDateString("pt-BR")
+            : "—",
+          indicacao: p.indicacoes?.nome ?? "—",
+          advogado: p.advogado ?? "—",
+        };
+      }),
       footerNote: `Gerado em ${new Date().toLocaleString("pt-BR")}`,
     });
   }
@@ -963,8 +970,9 @@ function ProcessosPage() {
                   </thead>
                   <tbody className="bg-background">
                     {list.data.map((p, idx) => {
+                      const partes = normalizeProcessoPartes(p);
                       const isAtivo = p.status !== "arquivado" && p.status !== "suspenso";
-                      const autorNormalizado = normalizeName(p.autor);
+                      const autorNormalizado = normalizeName(partes.autores[0] ?? "");
                       const responsavel = [
                         p.representantes?.nome,
                         p.clientes?.nome,
@@ -980,7 +988,9 @@ function ProcessosPage() {
                             {idx + 1}
                           </td>
                           <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                            <span className="block font-medium uppercase">{p.autor || "—"}</span>
+                            <span className="block whitespace-pre-line font-medium uppercase">
+                              {partes.autores.join("\n") || "—"}
+                            </span>
                             {responsavel && (
                               <span className="mt-0.5 block text-xs text-muted-foreground">
                                 Responsável: {responsavel}
@@ -988,7 +998,9 @@ function ProcessosPage() {
                             )}
                           </td>
                           <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
-                            {p.reu || "—"}
+                            <span className="whitespace-pre-line">
+                              {partes.reus.join("\n") || "—"}
+                            </span>
                           </td>
                           <td className="px-2 py-2 text-center align-top border border-border/60 break-words">
                             <span
@@ -1076,7 +1088,9 @@ function ProcessosPage() {
                   {editing.numero_cnj ?? "Sem CNJ"}
                 </p>
                 <SheetTitle className="font-serif text-2xl">
-                  {editing.autor} <span className="text-muted-foreground">×</span> {editing.reu}
+                  {normalizeProcessoPartes(editing).autores.join(", ")}{" "}
+                  <span className="text-muted-foreground">×</span>{" "}
+                  {normalizeProcessoPartes(editing).reus.join(", ")}
                 </SheetTitle>
                 <SheetDescription>
                   Edite os dados do processo e acompanhe o progresso.
@@ -1402,6 +1416,12 @@ function ProcessoForm({
                 />
               </div>
             </div>
+            {prazosVinculados.isError && (
+              <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                Não foi possível carregar os eventos deste processo. Atualize a página para tentar
+                novamente; o indicador geral de prazo pode ficar indisponível enquanto isso.
+              </p>
+            )}
             {eventosAbertos.length > 0 && (
               <div className="space-y-2 border-t border-border/60 pt-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

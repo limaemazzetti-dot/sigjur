@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 
 export type AgendaItem = {
   id: string;
@@ -49,7 +50,9 @@ export const agendaProxima = createServerFn({ method: "GET" })
         id: p.id,
         tipo: isPericia ? "pericia" : isAudiencia ? "audiencia" : "prazo",
         titulo: p.titulo,
-        subtitulo: p.processos ? `${p.processos.autor} × ${p.processos.reu}` : p.descricao,
+        subtitulo: p.processos
+          ? `${normalizeProcessoPartes(p.processos).autores.join(", ")} × ${normalizeProcessoPartes(p.processos).reus.join(", ")}`
+          : p.descricao,
         data: p.data_prazo,
         prioridade: p.prioridade,
         diasRestantes: dias,

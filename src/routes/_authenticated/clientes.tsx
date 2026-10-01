@@ -88,8 +88,18 @@ function ClientesPage() {
     onSuccess: () => {
       toast.success("Removido");
       qc.invalidateQueries({ queryKey: ["clientes"] });
+      qc.invalidateQueries({ queryKey: ["clientes-select"] });
+      qc.invalidateQueries({ queryKey: ["fornecedores"] });
+      qc.invalidateQueries({ queryKey: ["processos-resumo"] });
       qc.invalidateQueries({ queryKey: ["agenda-proxima"] });
       autoSync(["clientes", "painel"]);
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "Não foi possível remover o cliente. Atualize a página e tente novamente.";
+      toast.error(message);
     },
   });
 

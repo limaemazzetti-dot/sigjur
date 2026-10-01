@@ -61,6 +61,7 @@ import { useAutoSync } from "@/lib/use-auto-sync";
 import { SearchableProcessPicker } from "@/components/searchable-process-picker";
 import { SearchableClientPicker } from "@/components/searchable-client-picker";
 import { CurrencyInput } from "@/components/currency-input";
+import { normalizeProcessoPartes } from "@/lib/processo-partes";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -119,11 +120,13 @@ function processoNome(
     | {
         clientes?: { nome?: string | null } | null;
         autor?: string | null;
+        autores?: unknown;
       }
     | null
     | undefined,
 ) {
-  return processo?.autor || processo?.clientes?.nome || "Cliente não informado";
+  const partes = processo ? normalizeProcessoPartes(processo) : null;
+  return partes?.autores[0] || processo?.clientes?.nome || "Cliente não informado";
 }
 
 function processoPartes(
@@ -131,13 +134,16 @@ function processoPartes(
     | {
         autor?: string | null;
         reu?: string | null;
+        autores?: unknown;
+        reus?: unknown;
       }
     | null
     | undefined,
 ) {
+  const normalized = processo ? normalizeProcessoPartes(processo) : null;
   const partes = [
-    processo?.autor ? `Autor: ${processo.autor}` : null,
-    processo?.reu ? `Réu: ${processo.reu}` : null,
+    normalized?.autores.length ? `Autor(es): ${normalized.autores.join(", ")}` : null,
+    normalized?.reus.length ? `Réu(s): ${normalized.reus.join(", ")}` : null,
   ].filter(Boolean);
   return partes.join(" · ") || "Partes não informadas";
 }
@@ -359,6 +365,8 @@ function LancamentosPage() {
         Valor: Number(l.valor),
         Status: isOverdue(l.data, l.status) ? "atrasado" : l.status,
       })),
+      "Dados",
+      { currencyColumns: ["Valor"] },
     );
   }
 
@@ -368,6 +376,8 @@ function LancamentosPage() {
       filename: `lancamentos-${ano}${mes ? "-" + String(mes).padStart(2, "0") : ""}`,
       titulo: `Lançamentos Financeiros — ${periodoLabel}`,
       subtitulo: `Total de ${lanc.data.length} registros`,
+      orientation: "landscape",
+      noWrapDataKeys: ["data", "tipo", "status"],
       columns: [
         { header: "Data", dataKey: "data" },
         { header: "Descrição", dataKey: "descricao" },
@@ -463,7 +473,9 @@ function LancamentosPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:min-w-0 xl:flex-1 xl:flex-nowrap xl:items-end">
             <div className="sm:col-span-2 xl:min-w-0 xl:flex-[2]">
-              <Label className="text-xs whitespace-nowrap">Buscar cliente, fornecedor ou processo</Label>
+              <Label className="text-xs whitespace-nowrap">
+                Buscar cliente, fornecedor ou processo
+              </Label>
               <Input
                 value={search.q ?? ""}
                 onChange={(e) => updateSearch({ q: e.target.value || undefined })}
@@ -613,15 +625,15 @@ function LancamentosPage() {
             <Table className="min-w-[1450px]">
               <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
                 <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Descrição</TableHead>
+                  <TableHead className="whitespace-nowrap">Data</TableHead>
+                  <TableHead className="whitespace-nowrap">Descrição</TableHead>
                   <TableHead>Processo</TableHead>
                   <TableHead>Cliente / Fornecedor</TableHead>
                   <TableHead>Observações</TableHead>
                   <TableHead>Categoria</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="whitespace-nowrap">Tipo</TableHead>
+                  <TableHead className="whitespace-nowrap">Status</TableHead>
+                  <TableHead className="whitespace-nowrap text-right">Valor</TableHead>
                   <TableHead className="w-24 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
